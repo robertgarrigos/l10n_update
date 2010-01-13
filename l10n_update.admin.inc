@@ -29,6 +29,29 @@ define('L10N_UPDATE_UNKNOWN', -2);
  */
 define('L10N_UPDATE_NOT_FETCHED', -3);
 
+// Include l10n_update API
+include_once 'l10n_update.inc';
+
+/**
+ * Admin overview page
+ */
+function l10n_update_admin_overview() {
+  // For now we get package information provided by modules
+  $projects = l10n_update_get_projects();
+  $languages = l10n_update_language_list('name');
+  if ($projects && $languages) {
+    $history = l10n_update_get_history();
+    $available = l10n_update_available_releases();
+    $updates = _l10n_update_compare_multiple($projects, $history, $available);
+    $output = theme('l10n_update_project_status', $projects, $languages, $history, $available, $updates);
+    $output .= drupal_get_form('l10n_update_admin_import_form', $projects, $updates);
+  }
+  else {
+    $output = t('No projects or languages to update.');
+  }
+  return $output;
+}
+
 /**
  * Update form
  * 
@@ -36,26 +59,15 @@ define('L10N_UPDATE_NOT_FETCHED', -3);
  * @todo check language support in server
  * @todo check file update dates
  */
-function l10n_update_admin_import_form() {
-  module_load_include('inc', 'l10n_update');
+function l10n_update_admin_import_form($form_state, $projects, $updates) {
+  //module_load_include('inc', 'l10n_update');
   // For now we get package information provided by modules
   $projects = l10n_update_get_projects();
   $languages = l10n_update_language_list('name');  
 
   if ($projects && $languages) {
-    $history = l10n_update_refresh_history();
-    $available = l10n_update_available_releases();
-    $updates = _l10n_update_compare($projects, $history, $available);
-    
     $form['updates'] = array('#type' => 'value', '#value' => $updates);
-    
-    $form['last'] = array(
-      '#type' => 'item',
-      '#title' => t('Last checked'),
-      '#value' => format_date(variable_get('l10n_update_last_check', 0)),
-    );
 
-    $form['projects'] = array('#value' => theme('l10n_update_project_status', $projects, $languages, $history, $available, $updates));
     $form['languages'] = array(
       '#title' => t('Languages'),
       '#type' => 'checkboxes',
@@ -90,6 +102,7 @@ function l10n_update_admin_import_form_submit($form, $form_state) {
     $mode = $form_state['values']['mode'];
     
     if ($languages && $projects && $updates) {
+      module_load_include('batch.inc', 'l10n_update');
       $batch = l10n_update_batch_multiple($projects, $languages, $updates, $mode);
       batch_set($batch);
     }
@@ -128,6 +141,28 @@ function l10n_update_admin_settings_form() {
     '#description' => t('Select how frequently you want to automatically check for updated translations for installed modules and themes.'),
   );
   return system_settings_form($form);
+}
+
+/**
+ * Fetch update information for all projects / all languages
+ * 
+ * We refresh anyway if the data is older than a day
+ * 
+ * @return array()
+ *   Available releases indexed by project and language
+ */
+function l10n_update_available_releases($refresh = FALSE) {  
+  if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && $cache->created > time() - 24 * 3600) {
+    return $cache->data;
+  }
+  else {
+    module_load_include('inc', 'l10n_update');
+    $projects = l10n_update_get_projects(TRUE);
+    $languages = l10n_update_language_list();
+    $available = _l10n_update_check_releases($projects, array_keys($languages));
+    cache_set('l10n_update_available_releases', $available);
+    return $available;
+  }
 }
 
 /**
@@ -170,17 +205,18 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
     $row = theme('l10n_update_version_status', $status);
     
     $row .= "<div class=\"project $class\">";
-    $title = isset($project['title']) ? $project['title'] : $project['name'];
+    $title = isset($project->title) ? $project->title : $project->name;
     $row .= check_plain($title);
-    $row .= ' '. check_plain($project['info']['version']);
+    $row .= ' ' . check_plain($project->version);
+    $row .= ' ' . l($project->l10n_server, $project->l10n_server);
     $row .= "</div>\n";
 
     $row .= "<div class=\"versions\">\n";
     $versions = array();
     foreach ($languages as $lang => $language) {
-      $current = isset($history[$name]->updates[$lang]) ? theme('l10n_update_tag_date', $history[$name]->updates[$lang]) : '';
+      $current = isset($history[$name][$lang]) ? theme('l10n_update_tag_date', $history[$name][$lang]) : '';
       $update = isset($updates[$name][$lang]) ? theme('l10n_update_tag_date', $updates[$name][$lang]) : '';      
-      $download = isset($updates[$name][$lang]) ? l(t('Download'), $updates[$name][$lang]['download_link']) : '';
+      $download = isset($updates[$name][$lang]) ? l(t('Download'), $updates[$name][$lang]->url) : '';
       if ($update) {
         $status = 'update';
         $class = 'warning';
@@ -215,15 +251,15 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
  * @return unknown_type
  */
 function theme_l10n_update_tag_date($release) {
-  if (is_object($release)) {
+  if (isset($release->download_version)) {
     // This is a release history object
     $tag = $release->download_version;
     $date = $release->download_date;
   }
   else {
     // This is fetched information
-    $tag = $release['tag'];
-    $date = $release['date'];
+    $tag = $release->version;
+    $date = $release->updated;
   }
   return '<strong>' . check_plain($tag) . '</strong> <span class="version-date">' . format_date($date, 'short') . '</span>';
 }

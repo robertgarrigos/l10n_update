@@ -32,9 +32,9 @@ function l10n_update_batch_multiple($projects, $languages, $updates = NULL, $mod
   }
   foreach ($projects as $project) {
     foreach ($languages as $lang) {
-      if (!empty($updates[$project['name']][$lang])) {
-        $release = $updates[$project['name']][$lang];
-        $operations[] = array('_l10n_update_batch_download_import', array($release['download_link'], $lang, $mode));
+      if (!empty($updates[$project->name][$lang])) {
+        $release = $updates[$project->name][$lang];
+        $operations[] = array('_l10n_update_batch_download_import', array($release->url, $lang, $mode));
         $operations[] = array('_l10n_update_batch_history', array($project, $release));
       }
     }
@@ -56,7 +56,7 @@ function _l10n_update_create_batch($operations = array()) {
     'title'         => $t('Updating translation.'),
     'init_message'  => $t('Downloading and importing files.'),
     'error_message' => $t('Error importing interface translations'),
-    'file'          => drupal_get_path('module', 'l10n_update') . '/l10n_batch.inc',
+    'file'          => drupal_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
     'finished'      => '_l10n_update_batch_finished',
   );
   return $batch;

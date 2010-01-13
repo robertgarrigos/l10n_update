@@ -9,10 +9,11 @@
  */
 
 /**
- * Default update server
+ * Default update server, filename and URL
  */
-define('L10N_UPDATE_DEFAULT_SERVER', 'http://ftp.drupal.org');
-define('L10N_UPDATE_DEFAULT_PATH', 'files/translations/%core/%project/%project-%release.%language.po');
+define('L10N_UPDATE_DEFAULT_SERVER', 'http://localize.drupal.org');
+define('L10N_UPDATE_DEFAULT_FILENAME', '%project-%release.%language.po');
+define('L10N_UPDATE_DEFAULT_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%filename');
 
 /**
  * Implementation of hook_menu().
@@ -21,8 +22,7 @@ function l10n_update_menu() {
   $items['admin/build/translate/update'] = array(
     'title' => 'Update',
     'description' => 'Available updates',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('l10n_update_admin_import_form'),
+    'page callback' => 'l10n_update_admin_overview',
     'access arguments' => array('translate interface'),
     'file' => 'l10n_update.admin.inc',
     'weight' => 20,
@@ -138,21 +138,6 @@ function l10n_update_client_save_string() {
     }
   }
 }
-/**
- * Fetch update information for all projects / all languages
- * 
- * @return array()
- *   Available releases indexed by project and language
- */
-function l10n_update_available_releases($refresh = FALSE) {  
-  if (!$refresh && ($cache = cache_get('l10n_update_available_releases'))) {
-    return $cache->data;
-  }
-  else {
-    module_load_include('inc', 'l10n_update');
-    return _l10n_update_refresh();
-  }
-}
 
 /**
  * Get list of projects
@@ -160,15 +145,14 @@ function l10n_update_available_releases($refresh = FALSE) {
  * Atm, this is provided by modules implementing the l10n_update hook.
  * But in the future we might be able to fetch it from install files.
  */
-function l10n_update_get_projects($rebuild = FALSE) {
+function l10n_update_get_projects($rebuild = NULL) {
   static $projects;  
 
   if ($rebuild) {
     $current = l10n_update_get_projects(FALSE);
-    $projects = l10n_update_build_projects();
     // Set all existing projects as disabled but don't delete any then update new ones
     db_query('UPDATE {l10n_update_project} SET status = 0');
-    foreach ($projects as $project => $data) {
+    foreach (l10n_update_build_projects() as $project => $data) {
       $update = empty($current[$project]) ? array() : array('name');
       drupal_write_record('l10n_update_project', $data, $update);
     }
@@ -176,13 +160,33 @@ function l10n_update_get_projects($rebuild = FALSE) {
   if (!isset($projects)) {
     $projects = array();
     $result = db_query('SELECT * FROM {l10n_update_project}');
-    while ($project = db_fetch_array($result)) {
-      $projects[$project['name']] = $project;
+    while ($project = db_fetch_object($result)) {
+      $projects[$project->name] = $project;
     }
+  }
+  // If no projects yet we may force a rebuild
+  if (!$projects && !isset($rebuild)) {
+    return l10n_update_get_projects(TRUE);
   }
   return $projects;
 }
 
+/**
+ * Save project data
+ */
+function l10n_update_save_project($project, $current = NULL) {
+  if ($current) {
+    $update = array('name');
+    // If version changed, update all releases
+    if ($project->version != $current->version) {
+      
+    }
+  }
+  else {
+    $update = array();
+  }
+  return drupal_write_record('l10n_update_project', $project, $update);
+}
 /**
  * Build project list
  */
@@ -213,24 +217,28 @@ function l10n_update_build_projects() {
  * Build file path for a project
  */
 function l10n_update_build_path($project) {
+  $project = (object)$project;
   $variables = array(
-    '%project' => $project['name'],
-    '%release' => $project['version'],
+    '%project' => $project->name,
+    '%release' => $project->version,
     // For core path replace dot by slash
-    '%core' => strtr($project['core'], array('.' => '-')),
+    '%core' => strtr($project->core, array('.' => '-')),
   );
-  $string = variable_get('l10n_update_default_path', L10N_UPDATE_DEFAULT_PATH);
-  return strtr($string, $variables);
+  $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
+  $variables['%filename'] = strtr($filename, $variables);
+  $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
+  return strtr($filepath, $variables);
 }
 
 /**
  * Build full URL for a project, release, language
  */
 function l10n_update_build_url($project, $langcode) {
+  $project = (object)$project;
   $variables = array(
     '%language' => $langcode,
   );
-  return $project['l10n_server'] . '/' . strtr($project['l10n_path'], $variables);
+  return strtr($project->l10n_path, $variables);
 }
 
 /**
@@ -239,18 +247,14 @@ function l10n_update_build_url($project, $langcode) {
  * Returns an array indexed by project name
  * For each project there are updates indexed by language
  */
-function l10n_update_get_history($refresh = FALSE) {
+function l10n_update_get_history($refresh = NULL) {
   static $status;
   
   if ($refresh || !isset($status)) {
-    $status = array();
-    $result = db_query("SELECT * FROM {l10n_update_project}");
-    while ($project = db_fetch_object($result)) {
-      $status[$project->name] = $project;
-    }
+    // Now add downloads history to projects
     $result = db_query("SELECT * FROM {l10n_update_download}");
     while ($update = db_fetch_object($result)) {
-      $status[$update->project]->updates[$update->language] = $update;
+      $status[$update->project][$update->language] = $update;
     }
   }
   
@@ -265,15 +269,14 @@ function l10n_update_refresh_history() {
   $updates = l10n_update_get_history();
   
   $changes = 0;
-  foreach ($projects as &$project) {
-    $name = $project['name'];
-    if (empty($updates[$name])) {
-      // Project is not there, create it
-      $save = array('name' => $name, 'version' => $project['info']['version']);
-      drupal_write_record('l10n_update_project', $save);
+  foreach ($projects as $name => &$project) {
+    if (!empty($updates[$name])) {
+      // Check versions for these updates
+      
+      drupal_write_record('l10n_update_project', $project);
       $changes++;     
     }
-    elseif ($updates[$name]->version != $project['info']['version']) {
+    elseif ($updates[$name]->version != $project['version']) {
       // Update project version
       $updates[$name]->version = $project['info']['version'];
       drupal_write_record('l10n_update_project', $updates[$name], 'name');

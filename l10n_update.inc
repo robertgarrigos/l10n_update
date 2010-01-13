@@ -99,24 +99,28 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
 /**
  * Compare and get list of downloadable updates
  */
- function _l10n_update_compare($projects, $history, $available) {
+ function _l10n_update_compare_multiple($projects, $history, $available) {
    $updates = array();
-   $langcodes = array_keys(l10n_update_language_list());
-   foreach ($projects as $project) {
-     $name = $project['name'];
-     $version = $project['info']['version'];
-     foreach ($langcodes as $lang) {
-       // If there is an available release for that project / version / language
-       if (!empty($available[$name]) && ($compare = _l10n_update_project_release($available[$name], $lang, $version))) {
-         $latest = !empty($history[$name]->updates[$lang]) ? $history[$name]->updates[$lang] : NULL;
-         if (!$latest || $latest->download_version != $compare['tag'] || $latest->download_date < $compare['date']) {
-           $updates[$name][$lang] = $compare;
-         }
+   foreach ($available as $name => $project_updates) {    
+     foreach ($project_updates as $lang => $candidate) {
+       if (!empty($projects[$name]) && !empty($candidate->updated) && (empty($history[$name][$lang]) || _l10n_update_compare($projects[$name], $history[$name][$lang], $candidate))) {
+         $updates[$name][$lang] = $candidate;
        }
      }
    }
    return $updates;
  }
+
+/**
+ * Compare a single project update with an update candidate
+ * 
+ * @return boolean
+ *   TRUE if the file needs update
+ */
+function _l10n_update_compare($project, $download, $candidate) {
+  return $candidate->updated && ($candidate->updated > $download->download_date 
+    || $project->version != $download->download_version);
+}
 
 /**
  * Build project data as an array
@@ -188,10 +192,27 @@ function _l10n_update_check_releases($projects, $languages) {
   $result = array();
   foreach ($projects as $name => $project) {
     foreach ($languages as $lang) {
-      $url = l10n_update_build_url($project, $lang);
-      dsm($url);
-      $result[$name][$lang] = l10n_update_http_check($url);
+      $result[$name][$lang] = l10n_update_check_translation($project, $lang);
     }
+  }
+  return $result;
+}
+
+/**
+ * Check file availability for project / language
+ * 
+ * @param $project
+ *   Project object
+ * @param $langcode
+ *   Language code to check
+ */
+function l10n_update_check_translation($project, $langcode) {
+  $url = l10n_update_build_url($project, $langcode);
+  $result = l10n_update_http_check($url);
+  // Add some project data to the result
+  if ($result) {
+    $result->language = $langcode;
+    $result->version = $project->version;
   }
   return $result;
 }
@@ -252,12 +273,12 @@ function _l10n_update_build_fetch_url($project, $languages, $site_key = '') {
  */
 function l10n_update_download_history($project, $release) {
   $save = array(
-    'project' => $project['name'],
-    'language' => $release['language'],
+    'project' => $project->name,
+    'language' => $release->language,
     'import_date' => time(),
-    'download_date' => $release['date'],
-    'download_version' => $release['tag'],
-    'download_link' => $release['download_link']
+    'download_date' => $release->updated,
+    'download_version' => $release->version,
+    'download_link' => $release->url,
   );
   // Update or write new record
   if (db_result(db_query("SELECT project FROM {l10n_update_download} WHERE project = '%s' AND language = '%s'", $save['project'], $save['language']))) {
@@ -311,9 +332,8 @@ function l10n_update_http_check($url, $headers = array()) {
   $result = l10n_update_http_request($url, $headers, 'HEAD');
   if ($result && $result->code == '200') {
     $result->updated = isset($result->headers['Last-Modified']) ? strtotime($result->headers['Last-Modified']) : 0;
-    return $result;
   }
-  
+  return $result;
 }
 /**
  * Perform an HTTP request. Installer safe simplified version.
