@@ -9,6 +9,12 @@
  */
 
 /**
+ * Default update server
+ */
+define('L10N_UPDATE_DEFAULT_SERVER', 'http://ftp.drupal.org');
+define('L10N_UPDATE_DEFAULT_PATH', 'files/translations/%core/%project/%project-%release.%language.po');
+
+/**
  * Implementation of hook_menu().
  */
 function l10n_update_menu() {
@@ -154,12 +160,77 @@ function l10n_update_available_releases($refresh = FALSE) {
  * Atm, this is provided by modules implementing the l10n_update hook.
  * But in the future we might be able to fetch it from install files.
  */
-function l10n_update_get_projects() {
+function l10n_update_get_projects($rebuild = FALSE) {
   static $projects;  
+
+  if ($rebuild) {
+    $current = l10n_update_get_projects(FALSE);
+    $projects = l10n_update_build_projects();
+    // Set all existing projects as disabled but don't delete any then update new ones
+    db_query('UPDATE {l10n_update_project} SET status = 0');
+    foreach ($projects as $project => $data) {
+      $update = empty($current[$project]) ? array() : array('name');
+      drupal_write_record('l10n_update_project', $data, $update);
+    }
+  }
   if (!isset($projects)) {
-    $projects = module_invoke_all('l10n_update');
+    $projects = array();
+    $result = db_query('SELECT * FROM {l10n_update_project}');
+    while ($project = db_fetch_array($result)) {
+      $projects[$project['name']] = $project;
+    }
   }
   return $projects;
+}
+
+/**
+ * Build project list
+ */
+function l10n_update_build_projects() {
+  module_load_include('compare.inc', 'update');
+  //$projects = update_get_projects();
+  $projects = array();
+  _update_process_info_list($projects, module_rebuild_cache(), 'module');
+  _update_process_info_list($projects, system_theme_data(), 'theme');
+  // Allow other modules to alter projects before fetching and comparing.
+  drupal_alter('update_projects', $projects);
+  // Prepare project data
+  foreach ($projects as $project => $data) {
+    $projects[$project] += array(
+      'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
+      'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
+      'l10n_server' => isset($data['info']['l10n_server']) ? $data['info']['l10n_server'] : variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
+      'status' => 1,
+    );
+    if (empty($data['l10n_path'])) {
+      $projects[$project]['l10n_path'] = l10n_update_build_path($projects[$project]);
+    }
+  }
+  return $projects;
+}
+
+/**
+ * Build file path for a project
+ */
+function l10n_update_build_path($project) {
+  $variables = array(
+    '%project' => $project['name'],
+    '%release' => $project['version'],
+    // For core path replace dot by slash
+    '%core' => strtr($project['core'], array('.' => '-')),
+  );
+  $string = variable_get('l10n_update_default_path', L10N_UPDATE_DEFAULT_PATH);
+  return strtr($string, $variables);
+}
+
+/**
+ * Build full URL for a project, release, language
+ */
+function l10n_update_build_url($project, $langcode) {
+  $variables = array(
+    '%language' => $langcode,
+  );
+  return $project['l10n_server'] . '/' . strtr($project['l10n_path'], $variables);
 }
 
 /**
@@ -171,7 +242,7 @@ function l10n_update_get_projects() {
 function l10n_update_get_history($refresh = FALSE) {
   static $status;
   
-  if ($refresh ||!isset($status)) {
+  if ($refresh || !isset($status)) {
     $status = array();
     $result = db_query("SELECT * FROM {l10n_update_project}");
     while ($project = db_fetch_object($result)) {

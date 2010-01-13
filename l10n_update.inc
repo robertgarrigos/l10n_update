@@ -182,6 +182,21 @@ function _l10n_update_fetch_releases($projects, $languages) {
 }
 
 /**
+ * Check latest release date for each language
+ */
+function _l10n_update_check_releases($projects, $languages) {
+  $result = array();
+  foreach ($projects as $name => $project) {
+    foreach ($languages as $lang) {
+      $url = l10n_update_build_url($project, $lang);
+      dsm($url);
+      $result[$name][$lang] = l10n_update_http_check($url);
+    }
+  }
+  return $result;
+}
+
+/**
  * Generates the URL to fetch information about project updates.
  *
  * This figures out the right URL to use, based on the project's .info file
@@ -226,140 +241,6 @@ function _l10n_update_build_fetch_url($project, $languages, $site_key = '') {
 }
 
 /**
- * Create a batch to download and import
- */
-function l10n_update_download_create_batch($url, $locale, $mode = LOCALE_IMPORT_OVERWRITE) {  
-  $operations[] = array('_l10n_update_batch_download_import', array($url, $locale, $mode));
-  //$operations[] = array('_l10n_update_batch_import', array($locale));
-  return _l10n_update_create_batch($operations);
-}
-
-/**
- * Create batch stub for this module
- * 
- * @return $batch
- */
-function _l10n_update_create_batch($operations = array()) {
-  $t = get_t();
-  $batch = array(
-    'operations'    => $operations,
-    'title'         => $t('Updating translation.'),
-    'init_message'  => $t('Downloading and importing files.'),
-    'error_message' => $t('Error importing interface translations'),
-    'file'          => drupal_get_path('module', 'l10n_update') . '/l10n_update.inc',
-    'finished'      => '_l10n_update_batch_finished',
-  );
-  return $batch;
-}
-
-/**
- * Create a big batch for multiple projects and languages
- * 
- * @param $projects
- *   Array of projects
- * @param $languages
- *   Array of language codes
- * @param $updates
- *   Optional array of available updates. will be calculated if not passed
- */
-function l10n_update_batch_multiple($projects, $languages, $updates = NULL, $mode = LOCALE_IMPORT_OVERWRITE) {
-  if (is_null($updates)) {
-    $available = _l10n_update_fetch_releases($projects, $languages);
-    $updates = _l10n_update_compare($projects, array(), $available);
-  }
-  foreach ($projects as $project) {
-    foreach ($languages as $lang) {
-      if (!empty($updates[$project['name']][$lang])) {
-        $release = $updates[$project['name']][$lang];
-        $operations[] = array('_l10n_update_batch_download_import', array($release['download_link'], $lang, $mode));
-        $operations[] = array('_l10n_update_batch_history', array($project, $release));
-      }
-    }
-  }
-  if (!empty($operations)) {
-    return _l10n_update_create_batch($operations);
-  }
-}
-
-/**
- * Some complex batch callback to handle the full download and import
- * 
- * Done this way so we pass variables from one step to the next
- * and we can better handle errors
- * 
- * I love batch processes ;-)
- */
-function _l10n_update_batch_download_import($url, $locale, $mode, &$context) {
-  $t = get_t();
-  if (!isset($context['sandbox']['step'])) {
-    $context['sandbox']['step'] = 0;
-  }
-
-  switch ($context['sandbox']['step']) {
-    case 0: // Download message (for multiple downloads batch)
-      // This message may never show up if next step takes less than a second?
-      $context['message'] = $t('Downloading remote file from %url', array('%url' => $url));
-      $context['sandbox']['step'] = 1;
-      $context['finished'] = 0.1;
-      break;
-    case 1: // Download      
-      if ($file = l10n_update_download_file($url)) {
-        $context['sandbox']['file'] = $file;
-        $context['message'] = $t('Importing downloaded translation: %url.', array('%url' => $url));
-        $context['sandbox']['step'] = 2;
-        $context['results'][] = $url;
-      }
-      else {
-        $context['sandbox']['step'] = 10;
-      }
-      $context['finished'] = 0.5;      
-      break;
-    case 2: // Import
-      if (!empty($context['sandbox']['file'])) {
-        $file = $context['sandbox']['file'];
-        $context['results'][] = $file;
-        if (l10n_update_import_file($file, $locale, $mode)) {
-          $context['message'] = $t('Imported translation file.');
-          $context['finished'] = 1;
-          drupal_set_message($t('Successfully downloaded and imported translation from %url', array('%url' => $url)));
-        }
-        else {
-          $context['sandbox']['step'] = 10;
-        }
-        file_delete($file);
-      }
-      else {
-        // This should not happen, just in case
-        $context['sandbox']['step'] = 10;
-      }
-      
-      break;    
-    case 10: // Error
-    default: // In case something goes really wrong
-      $context['finished'] = 1;
-      drupal_set_message($t('The download and import operation failed: %url', array('%url' => $url)), 'error');
-      break;
-  }      
-}
-
-function _l10n_update_batch_download($url, &$context) {
-  $t = get_t();
-  if ($file = l10n_update_download_file($url)) {
-    $context['results'][] = $file;
-  }
-  else {
-    drupal_set_message($t('Failed download of %url', array('%url' => $url)), 'error');
-  }
-}
-
-/**
- * Batch process: Update the download history table
- */
-function _l10n_update_batch_history($project, $release, &$context) {
-  l10n_update_download_history($project, $release);
-}
-
-/**
  * Update the download history table
  * 
  * @param $project
@@ -386,52 +267,6 @@ function l10n_update_download_history($project, $release) {
     $update = array();
   }
   return drupal_write_record('l10n_update_download', $save, $update);
-}
-
-
-/**
- * Batch import translation file
- * 
- * This takes a file parameter or continues from previous batch which should have downloaded a file
- * 
- * @param $file
- *   File to be imported. If empty, the file will be taken from $context['results']
- * @param $locale
- * @param $mode
- * @param $context
- */
-function _l10n_update_batch_import($file, $locale, $mode, &$context) {
-  $t = get_t();
-  
-  if (!$file && !empty($context['results'])) {
-    $file = array_shift($context['results']);
-  }
-  if ($file) {
-    if (l10n_update_import_file($file, $locale, $mode)) {
-      drupal_set_message($t('Imported translation file %name.', array('%name' => $file->filepath)));
-      file_delete($file);
-    }
-    else {
-      drupal_set_message($t('Failed import of translation file %name.', array('%name' => $file->filepath)), 'error');
-    }
-  }
-}
-
-/**
- * Batch finished callback, set result message
- * 
- * @param $success
- * @param $results
- * @return unknown_type
- */
-function _l10n_update_batch_finished($success, $results) {
-  $t = get_t();
-  if ($success) {
-    drupal_set_message($t('Successfully imported translations.'));
-  }
-  else {
-    drupal_set_message($t('Error importing translations.'), 'error');
-  }
 }
 
 /**
@@ -470,6 +305,17 @@ function _l10n_update_refresh() {
 }
 
 /**
+ * Check file existence and last updated time
+ */
+function l10n_update_http_check($url, $headers = array()) {
+  $result = l10n_update_http_request($url, $headers, 'HEAD');
+  if ($result && $result->code == '200') {
+    $result->updated = isset($result->headers['Last-Modified']) ? strtotime($result->headers['Last-Modified']) : 0;
+    return $result;
+  }
+  
+}
+/**
  * Perform an HTTP request. Installer safe simplified version.
  * 
  * We cannot use drupal_http_request() at install, see http://drupal.org/node/527484
@@ -488,13 +334,16 @@ function _l10n_update_refresh() {
  * @param $retry
  *   An integer representing how many times to retry the request in case of a
  *   redirect.
+ * @param $check
+ *   Just check file existence and headers (update time)
  * @return
  *   An object containing the HTTP request headers, response code, headers,
  *   data and redirect status.
  */
 function l10n_update_http_request($url, $headers = array(), $method = 'GET', $data = NULL, $retry = 3) {
   $result = new stdClass();
-
+  // Return also full URL string
+  $result->url = $url;
   // Parse the URL and make sure we can handle the schema.
   $uri = parse_url($url);
 
@@ -662,4 +511,62 @@ function l10n_update_get_site_key() {
   global $base_url;
   
   return md5('l10n_update' . $base_url . $_SERVER['SERVER_NAME'] . $_SERVER['SERVER_ADDR']);
+}
+
+/**
+ * Populate an array of project data.
+ */
+function _l10n_update_process_info_list(&$projects, $list, $project_type) {
+  foreach ($list as $file) {
+    if (empty($file->status)) {
+      // Skip disabled modules or themes.
+      continue;
+    }
+
+    // Skip if the .info file is broken.
+    if (empty($file->info)) {
+      continue;
+    }
+
+    // If the .info doesn't define the 'project', try to figure it out.
+    if (!isset($file->info['project'])) {
+      $file->info['project'] = update_get_project_name($file);
+    }
+
+    // If we still don't know the 'project', give up.
+    if (empty($file->info['project'])) {
+      continue;
+    }
+
+    // If we don't already know it, grab the change time on the .info file
+    // itself. Note: we need to use the ctime, not the mtime (modification
+    // time) since many (all?) tar implementations will go out of their way to
+    // set the mtime on the files it creates to the timestamps recorded in the
+    // tarball. We want to see the last time the file was changed on disk,
+    // which is left alone by tar and correctly set to the time the .info file
+    // was unpacked.
+    if (!isset($file->info['_info_file_ctime'])) {
+      $info_filename = dirname($file->filename) .'/'. $file->name .'.info';
+      $file->info['_info_file_ctime'] = filectime($info_filename);
+    }
+
+    $project_name = $file->info['project'];
+    if (!isset($projects[$project_name])) {
+      // Only process this if we haven't done this project, since a single
+      // project can have multiple modules or themes.
+      $projects[$project_name] = array(
+        'name' => $project_name,
+        'info' => $file->info,
+        'datestamp' => isset($file->info['datestamp']) ? $file->info['datestamp'] : 0,
+        'includes' => array($file->name => $file->info['name']),
+        'type' => $project_name == 'drupal' ? 'core' : $project_type,
+        'version' => isset($file->info['version']) ? $file->info['version'] : '',
+        'core' => isset($file->info['core']) ? $file->info['core'] : '',
+      );
+    }
+    else {
+      $projects[$project_name]['includes'][$file->name] = $file->info['name'];
+      $projects[$project_name]['info']['_info_file_ctime'] = max($projects[$project_name]['info']['_info_file_ctime'], $file->info['_info_file_ctime']);
+    }
+  }
 }

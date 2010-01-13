@@ -18,6 +18,19 @@ function l10n_update_schema() {
         'length' => '50',
         'not null' => TRUE
       ),
+      'project_type' => array(
+        'description' => 'Project type, may be core, module, theme',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE
+      ),
+      'core' => array(
+        'description' => 'Core compatibility string for this project.',
+        'type' => 'varchar',
+        'length' => '128',
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'version' => array(
         'description' => 'Human readable name for project used on the interface.',
         'type' => 'varchar',
@@ -39,10 +52,25 @@ function l10n_update_schema() {
         'disp-width' => '11',
         'default' => 0,
       ),
+      'l10n_server' => array(
+        'description' => 'Localization server for this project.',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'l10n_path' => array(
+        'description' => 'Server path this project updates.',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'status' => array(
         'description' => 'Status flag. TBD',
         'type' => 'int',
         'not null' => TRUE,
+        'default' => 0,
       ),
     ),
     'primary key' => array('name'),
