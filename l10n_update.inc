@@ -14,6 +14,13 @@ define('L10N_UPDATE_STRING_DEFAULT', 0);
 define('L10N_UPDATE_STRING_CUSTOM', 1);
 
 /**
+ * Default update server, filename and URL
+ */
+define('L10N_UPDATE_DEFAULT_SERVER', 'http://localize.drupal.org');
+define('L10N_UPDATE_DEFAULT_FILENAME', '%project-%release.%language.po');
+define('L10N_UPDATE_DEFAULT_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%filename');
+
+/**
  * Download and import remote file
  */
 function l10n_update_download_import($download_url, $locale, $mode = LOCALE_IMPORT_OVERWRITE) {
@@ -102,9 +109,9 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
  function _l10n_update_compare_multiple($projects, $history, $available) {
    $updates = array();
    foreach ($available as $name => $project_updates) {    
-     foreach ($project_updates as $lang => $candidate) {
-       if (!empty($projects[$name]) && !empty($candidate->updated) && (empty($history[$name][$lang]) || _l10n_update_compare($projects[$name], $history[$name][$lang], $candidate))) {
-         $updates[$name][$lang] = $candidate;
+     foreach ($project_updates as $lang => $update) {
+       if (!empty($projects[$name]) && !empty($update->timestamp) && (empty($history[$name][$lang]) || _l10n_update_compare($history[$name][$lang], $update))) {
+         $updates[$name][$lang] = $update;
        }
      }
    }
@@ -112,87 +119,39 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
  }
 
 /**
- * Compare a single project update with an update candidate
+ * Compare current file with an update candidate
  * 
  * @return boolean
  *   TRUE if the file needs update
  */
-function _l10n_update_compare($project, $download, $candidate) {
-  return $candidate->updated && ($candidate->updated > $download->download_date 
-    || $project->version != $download->download_version);
+function _l10n_update_compare($current, $update) {
+  return !empty($update->timestamp) && 
+    ($update->timestamp > $current->timestamp || $update->version != $current->version);
 }
 
 /**
- * Build project data as an array
+ * Build project data as an object
  */
-function _l10n_update_build_project($name, $version = NULL, $server = NULL) {
-  $project = array(
-    'name' => $name,
-    'info' => array(
-      'version' => $version,
-      'translate status url' => $server ? $server : variable_get('l10n_update_server', NULL),
-    ),
-  );
+function _l10n_update_build_project($name, $version = NULL, $server = L10N_UPDATE_DEFAULT_SERVER, $path = L10N_UPDATE_DEFAULT_URL) {
+  $project = new Stdclass();
+  $project->name = $name;
+  $project->version = $version;
+  $project->l10n_server = $server;
+  $project->l10n_path = $path;
   return $project;
 }
 
 /**
- * Get a given version from project releases
- * 
- * This one tries to find a perfect match first and if not it returns
- * the first one which should be the most recent matching this version.
- * 
- * @param $project
- *   Project data from update status
- * @param $version
- * @return unknown_type
+ * Check latest release for project, languages
  */
-function _l10n_update_project_release($project, $langcode, $version) {
-  if ($version && !empty($project['releases'][$langcode][$version])) {
-    return $project['releases'][$langcode][$version];
-  }
-  elseif (!empty($project['releases'][$langcode])) {
-    return current($project['releases'][$langcode]);
-  }
-}
-
-/**
- * Get remote information about releases
- * 
- * Reuse the parser from update.fetch.inc
- * 
- * @param $projects
- *   Array of l10n_update projects
- * @param $languages
- *   Single language code or array of language codes
- */
-function _l10n_update_fetch_releases($projects, $languages) {
-  require_once 'l10n_update.parser.inc';
-  $site_key = l10n_update_get_site_key();
-  $data = array();
-  foreach ($projects as $project) {
-    if ($url = _l10n_update_build_fetch_url($project, $languages, $site_key)) {
-      $xml = l10n_update_http_request($url);
-      if (isset($xml->data)) {
-        $data[] = $xml->data;
-      }
-    }
-  }
-  if ($data) {
-    $parser = new l10n_update_xml_parser;
-    $available = $parser->parse($data);
-    return $available;
-  }  
-}
-
-/**
- * Check latest release date for each language
- */
-function _l10n_update_check_releases($projects, $languages) {
+function l10n_update_check_projects($projects, $languages, $local = TRUE, $remote = TRUE) {
   $result = array();
   foreach ($projects as $name => $project) {
     foreach ($languages as $lang) {
-      $result[$name][$lang] = l10n_update_check_translation($project, $lang);
+      $source = l10n_update_build_source($project, $lang);
+      if(l10n_update_check_source($source, $local, $remote)) {
+        $result[$name][$lang] = $source;
+      }
     }
   }
   return $result;
@@ -218,111 +177,20 @@ function l10n_update_check_translation($project, $langcode) {
 }
 
 /**
- * Generates the URL to fetch information about project updates.
- *
- * This figures out the right URL to use, based on the project's .info file
- * and the global defaults. Appends optional query arguments when the site is
- * configured to report usage stats.
- *
- * @param $project
- *   The array of project information from update_get_projects().
- * @param $languages
- *   Single language code or array of language codes
- * @param $site_key
- *   The anonymous site key hash (optional).
- *
- * @see update_refresh()
- * @see update_get_projects()
- */
-function _l10n_update_build_fetch_url($project, $languages, $site_key = '') {
-  // If multiple languages, langcode = es,en,..
-  $langcode = is_array($languages) ? implode(',', $languages) : $languages;
-  if (!isset($project['info']['translate status url'])) {
-    $project['info']['translate status url'] = variable_get('l10n_update_server', NULL);
-  }
-  // If not url yet, return none
-  if (empty($project['info']['translate status url'])) {
-    return;
-  }
-  $name = $project['name'];
-  $url = $project['info']['translate status url'];
-  $url .= '/l10n/status/project/'. $name;
-  if (!empty($site_key)) {
-    $url .= (strpos($url, '?') === TRUE) ? '&' : '?';
-    $url .= 'site_key=';
-    $url .= drupal_urlencode($site_key);
-    if (!empty($project['info']['version'])) {
-      $url .= '&version=';
-      $url .= drupal_urlencode($project['info']['version']);
-    }
-    $url .= '&language=';
-    $url .= drupal_urlencode($langcode);
-  }
-  return $url;
-}
-
-/**
- * Update the download history table
+ * Update the file history table
  * 
- * @param $project
- *   Project object
- * @param $release
- *   Release object
- * @param $context
- *   Batch context
+ * @param $file
+ *   Object representing the file just imported or downloaded
  */
-function l10n_update_download_history($project, $release) {
-  $save = array(
-    'project' => $project->name,
-    'language' => $release->language,
-    'import_date' => time(),
-    'download_date' => $release->updated,
-    'download_version' => $release->version,
-    'download_link' => $release->url,
-  );
+function l10n_update_file_history($file) {
   // Update or write new record
-  if (db_result(db_query("SELECT project FROM {l10n_update_download} WHERE project = '%s' AND language = '%s'", $save['project'], $save['language']))) {
+  if (db_result(db_query("SELECT project FROM {l10n_update_file} WHERE project = '%s' AND language = '%s'", $file->project, $file->language))) {
     $update = array('project', 'language');
   }
   else {
     $update = array();
   }
-  return drupal_write_record('l10n_update_download', $save, $update);
-}
-
-/**
- * Fetch project info via XML from a central server.
- */
-function _l10n_update_refresh() {
-  static $fail = array();
-  global $base_url;
-
-  $available = array();
-  $data = array();
-  $projects = l10n_update_get_projects();
-  $languages = l10n_update_language_list();
-  $locales = implode(',', array_keys($languages));
-  // Refresh history too
-  l10n_update_get_history(TRUE);
-  // Now that we have the list of projects, we should also clear our cache of
-  // available release data, since even if we fail to fetch new data, we need
-  // to clear out the stale data at this point.
-  cache_set('l10n_update_available_releases', NULL);
-  $max_fetch_attempts = variable_get('update_max_fetch_attempts', UPDATE_MAX_FETCH_ATTEMPTS);
-  
-  $available = _l10n_update_fetch_releases($projects, $locales);
-  
-  if (!empty($available) && is_array($available)) {
-    $frequency = variable_get('l10n_update_check_frequency', 1);
-    cache_set('l10n_update_available_releases', $available, 'cache', time() + (60 * 60 * 24 * $frequency));
-    watchdog('l10n_update', 'Attempted to fetch information about all available new releases and updates.', array(), WATCHDOG_NOTICE, l(t('view'), 'admin/reports/updates'));
-  }
-  else {
-    watchdog('l10n_update', 'Unable to fetch any information about available new releases and updates.', array(), WATCHDOG_ERROR, l(t('view'), 'admin/reports/updates'));
-  }
-  // Whether this worked or not, we did just (try to) check for updates.
-  variable_set('l10n_update_last_check', time());
-  return $available;
+  return drupal_write_record('l10n_update_file', $file, $update);
 }
 
 /**
@@ -588,5 +456,83 @@ function _l10n_update_process_info_list(&$projects, $list, $project_type) {
       $projects[$project_name]['includes'][$file->name] = $file->info['name'];
       $projects[$project_name]['info']['_info_file_ctime'] = max($projects[$project_name]['info']['_info_file_ctime'], $file->info['_info_file_ctime']);
     }
+  }
+}
+
+/**
+ * Build abstract translation source, to be mapped to a file or a download
+ */
+function l10n_update_build_source($project, $langcode, $filename = L10N_UPDATE_DEFAULT_FILENAME) {
+  $source = clone $project;
+  $source->project = $project->name;
+  $source->language = $langcode;
+  $source->filename = l10n_update_build_string($source, $filename);
+  return $source;
+}
+
+/**
+ * Build abstract translation source, to be mapped to a file or a download
+ */
+function l10n_update_build_string($project, $template) {
+  $variables = array(
+    '%project' => $project->name,
+    '%release' => $project->version,
+    // For core path replace dot by slash
+    '%core' => strtr($project->core, array('.' => '-')),
+    '%language' => isset($project->language) ? $project->language : '%language',
+    '%filename' => isset($project->filename) ? $project->filename : '%filename',
+  );
+  return strtr($template, $variables);
+}
+
+/**
+ * Check local and remote sources for the file
+ */
+function l10n_update_check_source($source, $local = TRUE, $remote = TRUE) {
+  if ($local && $file = l10n_update_check_source_file($source)) {
+    return $file;
+  }
+  if ($remote && $response = l10n_update_check_source_download($source)) {
+    return $response;
+  }
+}
+
+/**
+ * Check download
+ */
+function l10n_update_check_source_download($source) {
+  $url = l10n_update_build_string($source, $source->l10n_path);
+  $result = l10n_update_http_check($url);
+  if ($result && !empty($result->updated)) {
+    $source->type = 'download';
+    // There may have been redirects so we store the resulting url
+    $source->fileurl = $result->url;
+    $source->timestamp = $result->updated;
+    return $result;
+  } 
+}
+
+/**
+ * Check whether we've got the file in the filesystem under 'translations'
+ * 
+ * It will search, similar to modules and themes:
+ * - translations
+ * - sites/all/translations
+ * - sites/mysite/translations
+ * 
+ * Using name as the key will return just the last one found
+ * 
+ * @return Object
+ *  File object if found (filename, basename, name)
+ */
+function l10n_update_check_source_file($source, $directory = 'translations') {
+  $filename = preg_quote($source->filename) . '$';
+  // Using the 'name' key will return 
+  if ($files = drupal_system_listing($filename, $directory, 'name', 0)) {
+    $file = current($files);
+    $source->type = 'localfile';
+    $source->filepath = $file->filename;
+    $source->timestamp = filemtime($file->filename);
+    return $file;
   }
 }

@@ -38,20 +38,6 @@ function l10n_update_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'last_updated' => array(
-        'description' => 'Unix timestamp of last time project was updated.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'disp-width' => '11',
-        'default' => 0,
-      ),
-      'last_checked' => array(
-        'description' => 'Unix timestamp of last time project was updated.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'disp-width' => '11',
-        'default' => 0,
-      ),
       'l10n_server' => array(
         'description' => 'Localization server for this project.',
         'type' => 'varchar',
@@ -76,8 +62,8 @@ function l10n_update_schema() {
     'primary key' => array('name'),
   );
 
-  $schema['l10n_update_download'] = array(
-    'description' => 'Download information for project translations.',
+  $schema['l10n_update_file'] = array(
+    'description' => 'File and download information for project translations.',
     'fields' => array(
       'project' => array(
         'description' => 'A unique short name to identify the project.',
@@ -91,27 +77,42 @@ function l10n_update_schema() {
         'length' => '12',
         'not null' => TRUE
       ),
-      'import_date' => array(
-        'description' => 'Unix timestamp of the last file downloaded.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'disp-width' => '11',
-        'default' => 0,
-      ),
-      'download_date' => array(
-        'description' => 'Unix timestamp of the last file downloaded.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'disp-width' => '11',
-        'default' => 0,
-      ),
-      'download_link' => array(
-        'description' => 'Link to translation file for download.',
-        'type' => 'text',
+      'type' => array(
+        'description' => 'File origin: download or localfile',
+        'type' => 'varchar',
+        'length' => '50',
         'not null' => TRUE,
         'default' => '',
       ),
-      'download_version' => array(
+      'filename' => array(
+        'description' => 'Link to translation file for download.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'fileurl' => array(
+        'description' => 'Link to translation file for download.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'filepath' => array(
+        'description' => 'File system path for importing the file.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'timestamp' => array(
+        'description' => 'Unix timestamp of the last file downloaded.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'disp-width' => '11',
+        'default' => 0,
+      ),
+      'version' => array(
         'description' => 'Version tag of the downloaded file.',
         'type' => 'varchar',
         'length' => '128',
@@ -123,6 +124,27 @@ function l10n_update_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 1,
+      ),
+      'last_updated' => array(
+        'description' => 'Unix timestamp of last time project was updated.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'disp-width' => '11',
+        'default' => 0,
+      ),
+      'last_checked' => array(
+        'description' => 'Unix timestamp of last time project was updated.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'disp-width' => '11',
+        'default' => 0,
+      ),
+      'import_date' => array(
+        'description' => 'Unix timestamp of the last file downloaded.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'disp-width' => '11',
+        'default' => 0,
       ),
     ),
     'primary key' => array('project', 'language'),

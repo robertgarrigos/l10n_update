@@ -1,5 +1,5 @@
 <?php 
-/* Id */
+// $Id$
 /**
  * Extends the update parser to work with releases
  * 

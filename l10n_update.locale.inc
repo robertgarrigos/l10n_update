@@ -1,7 +1,9 @@
 <?php
+// $Id$
 /**
  * Override part of locale.inc library so we can manage string status
  */
+
 /**
  * Parses Gettext Portable Object file information and inserts into database
  * 

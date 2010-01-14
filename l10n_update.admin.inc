@@ -100,10 +100,17 @@ function l10n_update_admin_import_form_submit($form, $form_state) {
     $languages = array_filter($form_state['values']['languages']);
     $updates = $form_state['values']['updates'];
     $mode = $form_state['values']['mode'];
-    
+    // Filter out updates in other languages
+    foreach ($updates as $name => $project_updates) {
+      foreach ($project_updates as $lang => $update) {
+        if (!in_array($lang, $languages)) {
+          unset($updates[$name][$lang]);
+        }
+      }
+    }    
     if ($languages && $projects && $updates) {
       module_load_include('batch.inc', 'l10n_update');
-      $batch = l10n_update_batch_multiple($projects, $languages, $updates, $mode);
+      $batch = l10n_update_batch_multiple($updates, $mode);
       batch_set($batch);
     }
     else {
@@ -159,7 +166,7 @@ function l10n_update_available_releases($refresh = FALSE) {
     module_load_include('inc', 'l10n_update');
     $projects = l10n_update_get_projects(TRUE);
     $languages = l10n_update_language_list();
-    $available = _l10n_update_check_releases($projects, array_keys($languages));
+    $available = l10n_update_check_projects($projects, array_keys($languages));
     cache_set('l10n_update_available_releases', $available);
     return $available;
   }
@@ -214,9 +221,17 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
     $row .= "<div class=\"versions\">\n";
     $versions = array();
     foreach ($languages as $lang => $language) {
+      $update_info = $download_info = '';
       $current = isset($history[$name][$lang]) ? theme('l10n_update_tag_date', $history[$name][$lang]) : '';
-      $update = isset($updates[$name][$lang]) ? theme('l10n_update_tag_date', $updates[$name][$lang]) : '';      
-      $download = isset($updates[$name][$lang]) ? l(t('Download'), $updates[$name][$lang]->url) : '';
+      if ($update = isset($updates[$name][$lang]) ? $updates[$name][$lang] : NULL) {
+        $update_info = theme('l10n_update_tag_date', $update);      
+        if ($update->type == 'download') {
+          $download_info = l(t('Download'), $update->fileurl);
+        }
+        else {
+          $download_info = l(t('File'), file_create_url($file->filepath));
+        }
+      }
       if ($update) {
         $status = 'update';
         $class = 'warning';
@@ -230,8 +245,8 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
       $version = array(
         array('data' => $language, 'class' => 'version-title'),
         $current, 
-        $update,          
-        array('data' => $download, 'class' => 'version-links'),
+        $update_info,          
+        array('data' => $download_info, 'class' => 'version-links'),
         theme('l10n_update_version_status', $status),     
       );
       $versions[] = array('data' => $version, 'class' => $class); 
@@ -251,16 +266,8 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
  * @return unknown_type
  */
 function theme_l10n_update_tag_date($release) {
-  if (isset($release->download_version)) {
-    // This is a release history object
-    $tag = $release->download_version;
-    $date = $release->download_date;
-  }
-  else {
-    // This is fetched information
-    $tag = $release->version;
-    $date = $release->updated;
-  }
+  $tag = $release->version;
+  $date = $release->timestamp;
   return '<strong>' . check_plain($tag) . '</strong> <span class="version-date">' . format_date($date, 'short') . '</span>';
 }
 
