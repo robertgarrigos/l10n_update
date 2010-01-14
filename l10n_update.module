@@ -8,12 +8,12 @@
  * @todo Fetch information from info files
  */
 
-/**
- * Default update server, filename and URL
- */
-define('L10N_UPDATE_DEFAULT_SERVER', 'http://localize.drupal.org');
-define('L10N_UPDATE_DEFAULT_FILENAME', '%project-%release.%language.po');
-define('L10N_UPDATE_DEFAULT_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%filename');
+// Update mode: Remote server
+define('L10N_UPDATE_CHECK_REMOTE', 1);
+// Update mode: Local server
+define('L10N_UPDATE_CHECK_LOCAL', 2);
+// Update mode: both
+define('L10N_UPDATE_CHECK_ALL', L10N_UPDATE_CHECK_REMOTE | L10N_UPDATE_CHECK_LOCAL);
 
 /**
  * Implementation of hook_menu().
@@ -208,11 +208,11 @@ function l10n_update_build_projects() {
       'status' => 1,
     );
     $project = (object)$data;
-    if ($project->l10n_path) {
+    if (!isset($project->l10n_path)) {
       $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
       $project->filename = l10n_update_build_string($project, $filename);
       $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
-      $project->l10n_path = l10n_update_build_string($projects, $filepath);
+      $project->l10n_path = l10n_update_build_string($project, $filepath);
     }
     $projects[$name] = $project;
   }
@@ -286,7 +286,7 @@ function l10n_update_theme() {
       'arguments' => array('projects' => NULL, 'languages' => NULL, 'history' => NULL, 'available' => NULL, 'updates' => NULL),
       'file' => 'l10n_update.admin.inc',
     ),
-    'l10n_update_tag_date' => array(
+    'l10n_update_release' => array(
       'arguments' => array('tag' => NULL, 'date' => NULL),
       'file' => 'l10n_update.admin.inc',
     ),

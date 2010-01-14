@@ -7,11 +7,26 @@
 include_once 'l10n_update.inc';
 
 /**
- * Create a batch to download and import
+ * Create a batch to just download files
+ * 
+ * All sources must have a 'fileurl'
  */
-function l10n_update_batch_download($url, $locale, $mode = LOCALE_IMPORT_OVERWRITE) {  
-  $operations[] = array('_l10n_update_batch_download_import', array($url, $locale, $mode));
-  //$operations[] = array('_l10n_update_batch_import', array($locale));
+function l10n_update_batch_download($sources) {  
+  foreach ($updates as $update) {
+    $operations[] = array('_l10n_update_batch_download', array($update));
+  }
+  return _l10n_update_create_batch($operations);
+}
+
+/**
+ * Create a batch to just import files
+ * 
+ * All sources must have a 'filepath'
+ */
+function l10n_update_batch_import($sources, $mode = LOCALE_IMPORT_OVERWRITE) {
+  foreach ($updates as $update) {
+    $operations[] = array('_l10n_update_batch_import', array($update, $mode));
+  }
   return _l10n_update_create_batch($operations);
 }
 
@@ -19,28 +34,21 @@ function l10n_update_batch_download($url, $locale, $mode = LOCALE_IMPORT_OVERWRI
  * Create a big batch for multiple projects and languages
  * 
  * @param $updates
- *   Array of update sources to be run, indexed by project and language
- * @param $languages
- *   Array of language codes
- * @param $updates
- *   Optional array of available updates. will be calculated if not passed
+ *   Array of update sources to be run
+ * @param $mode
+ *   Import mode
  */
 function l10n_update_batch_multiple($updates, $mode = LOCALE_IMPORT_OVERWRITE) {
-  $t = get_t();
-  foreach ($updates as $project => $project_updates) {
-    foreach ($project_updates as $lang => $update) {
-      if ($update->type == 'download') {
-        $message = $t('Downloading and importing translation from %url', array('%url' => $update->fileurl));
-        $operations[] = array('_l10n_update_batch_message', array($message));
-        $operations[] = array('_l10n_update_batch_download', array($update));
-        $operations[] = array('_l10n_update_batch_import', array(NULL, $mode));
-      }
-      else {
-        $operations[] = array('_l10n_update_batch_import', array($update, $mode));
-      }
-      // This one takes always parameters from results
-      $operations[] = array('_l10n_update_batch_history', array(NULL));
+  foreach ($updates as $update) {
+    if ($update->type == 'download') {
+      $operations[] = array('_l10n_update_batch_download', array($update));
+      $operations[] = array('_l10n_update_batch_import', array(NULL, $mode));
     }
+    else {
+      $operations[] = array('_l10n_update_batch_import', array($update, $mode));
+    }
+    // This one takes always parameters from results
+    $operations[] = array('_l10n_update_batch_history', array(NULL));
   }
   if (!empty($operations)) {
     return _l10n_update_create_batch($operations);
@@ -63,6 +71,101 @@ function _l10n_update_create_batch($operations = array()) {
     'finished'      => '_l10n_update_batch_finished',
   );
   return $batch;
+}
+
+
+/**
+ * Batch download file
+ * 
+ * @param $update
+ * @param $context
+ * @return unknown_type
+ */
+function _l10n_update_batch_download($update, &$context) {
+  $t = get_t();
+  $file = l10n_update_download_file($update->fileurl, !empty($update->filepath) ? $update->filepath : NULL);
+  if ($file) {
+    $update->filepath = $file;
+    $context['message'] = $t('Importing downloaded translation: %url.', array('%url' => $update->fileurl));
+    $context['results'][] = $update;
+  }
+  else {
+    drupal_set_message($t('Failed download from %url', array('%url' => $update->fileurl)), 'error');
+  }  
+}
+
+/**
+ * Batch process: Update the download history table
+ */
+function _l10n_update_batch_history($update, &$context) {
+  if ($update = _l10n_update_batch_param($update, $context)) {
+    // If it's a downloaded file and not marked for keeping, delete file
+    if ($file->type == 'download' && empty($file->keep)) {
+      file_delete($file->filepath);
+      $file->filepath = '';
+    }
+    l10n_update_file_history($update);
+    $context['results'][] = $update;
+  }
+}
+
+/**
+ * Batch import translation file
+ * 
+ * This takes a file parameter or continues from previous batch which should have downloaded a file
+ * 
+ * @param $file
+ *   File to be imported. If empty, the file will be taken from $context['results']
+ * @param $locale
+ * @param $mode
+ * @param $context
+ */
+function _l10n_update_batch_import($file, $mode, &$context) {
+  $t = get_t();
+  if ($file = _l10n_update_batch_param($file, $context)) {
+    if (l10n_update_import_file($file->filepath, $file->language, $mode)) {
+      $file->import_date = time();
+      $context['results'][] = $file;
+      if ($file->type == 'download') {
+        drupal_set_message($t('Successfully downloaded and imported translation from %url', array('%url' => $update->fileurl)));        
+      }
+      else {
+        drupal_set_message($t('Imported translation file %name.', array('%name' => $file->filepath)));
+      }
+    }
+    else {
+      drupal_set_message($t('Failed import of translation file %name.', array('%name' => $file->filepath)), 'error');
+    }
+  }
+}
+
+/**
+ * Get parameter from results of previous batch if not present
+ */
+function _l10n_update_batch_param($param, &$context) {
+  if (isset($param)) {
+    return $param;
+  }
+  elseif (!empty($context['results'])) {
+    return array_pop($context['results']);
+  }
+}
+
+/**
+ * Batch finished callback, set result message
+ * 
+ * @param $success
+ * @param $results
+ * @return unknown_type
+ */
+function _l10n_update_batch_finished($success, $results) {
+  $t = get_t();
+  if ($success) {
+    drupal_set_message($t('Successfully imported translations.'));
+  }
+  else {
+    drupal_set_message($t('Error importing translations.'), 'error');
+  }
 }
 
 /**
@@ -136,96 +239,4 @@ function _l10n_update_batch_download_import($update, $mode, &$context) {
       drupal_set_message($t('The download and import operation failed: %url', array('%url' => $url)), 'error');
       break;
   }      
-}
-
-function _l10n_update_batch_message($message, &$context) {
-  $context['message'] = $message;
-}
-
-/**
- * Batch download file
- * 
- * @param $update
- * @param $context
- * @return unknown_type
- */
-function _l10n_update_batch_download($update, &$context) {
-  $t = get_t();
-  if ($file = l10n_update_download_file($update->fileurl)) {
-    $update->filepath = $file;
-    $context['message'] = $t('Importing downloaded translation: %url.', array('%url' => $update->fileurl));
-    $context['results'][] = $update;
-    drupal_set_message($t('Successfully downloaded and imported translation from %url', array('%url' => $update->fileurl)));
-  }
-  else {
-    drupal_set_message($t('Failed download from %url', array('%url' => $update->fileurl)), 'error');
-  }  
-}
-
-/**
- * Batch process: Update the download history table
- */
-function _l10n_update_batch_history($update, &$context) {
-  if ($update = _l10n_update_batch_param($update, $context)) {
-    l10n_update_file_history($update);
-    $context['results'][] = $update;
-  }
-}
-
-/**
- * Batch import translation file
- * 
- * This takes a file parameter or continues from previous batch which should have downloaded a file
- * 
- * @param $file
- *   File to be imported. If empty, the file will be taken from $context['results']
- * @param $locale
- * @param $mode
- * @param $context
- */
-function _l10n_update_batch_import($file, $mode, &$context) {
-  $t = get_t();
-  
-  if ($file = _l10n_update_batch_param($file, $context)) {
-    if (l10n_update_import_file($file->filepath, $file->language, $mode)) {
-      $file->import_date = time();
-      if ($file->type == 'download' && empty($file->keep)) {
-        file_delete($file->filepath);
-      }
-      $context['results'][] = $file;
-      drupal_set_message($t('Imported translation file %name.', array('%name' => $file->filepath)));
-    }
-    else {
-      drupal_set_message($t('Failed import of translation file %name.', array('%name' => $file->filepath)), 'error');
-    }
-  }
-}
-
-/**
- * Get parameter from results of previous batch if not present
- */
-function _l10n_update_batch_param($param, &$context) {
-  if (isset($param)) {
-    return $param;
-  }
-  elseif (!empty($context['results'])) {
-    return array_pop($context['results']);
-  }
-}
-
-/**
- * Batch finished callback, set result message
- * 
- * @param $success
- * @param $results
- * @return unknown_type
- */
-function _l10n_update_batch_finished($success, $results) {
-  $t = get_t();
-  if ($success) {
-    drupal_set_message($t('Successfully imported translations.'));
-  }
-  else {
-    drupal_set_message($t('Error importing translations.'), 'error');
-  }
 }

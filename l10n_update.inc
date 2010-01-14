@@ -8,17 +8,17 @@
 include_once './includes/locale.inc';
 include_once 'l10n_update.locale.inc';
 
-// Translation status: String imported from po
-define('L10N_UPDATE_STRING_DEFAULT', 0);
-// Translation status: Custom string, overridden original import
-define('L10N_UPDATE_STRING_CUSTOM', 1);
-
 /**
  * Default update server, filename and URL
  */
 define('L10N_UPDATE_DEFAULT_SERVER', 'http://localize.drupal.org');
 define('L10N_UPDATE_DEFAULT_FILENAME', '%project-%release.%language.po');
 define('L10N_UPDATE_DEFAULT_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%filename');
+
+// Translation status: String imported from po
+define('L10N_UPDATE_STRING_DEFAULT', 0);
+// Translation status: Custom string, overridden original import
+define('L10N_UPDATE_STRING_CUSTOM', 1);
 
 /**
  * Download and import remote file
@@ -106,12 +106,16 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
 /**
  * Compare and get list of downloadable updates
  */
- function _l10n_update_compare_multiple($projects, $history, $available) {
+function _l10n_update_compare_multiple($projects, $history, $available) {
    $updates = array();
    foreach ($available as $name => $project_updates) {    
      foreach ($project_updates as $lang => $update) {
-       if (!empty($projects[$name]) && !empty($update->timestamp) && (empty($history[$name][$lang]) || _l10n_update_compare($history[$name][$lang], $update))) {
-         $updates[$name][$lang] = $update;
+       if (!empty($projects[$name]) && !empty($update->timestamp)) {
+         $current = !empty($history[$name][$lang]) ? $history[$name][$lang] : NULL;
+         // Add when not current, timestamp newer or version difers (newer version)
+         if (_l10n_update_compare($current, $update) > 1 || $current->version != $update->version) {
+           $updates[$name][$lang] = $update;
+         }
        }
      }
    }
@@ -119,14 +123,32 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
  }
 
 /**
- * Compare current file with an update candidate
+ * Compare two update sources, looking for the newer one (bigger timestamp)
  * 
- * @return boolean
- *   TRUE if the file needs update
+ * This function can be used as a compare callback. It returns an integer less than, equal to, or greater than zero
+ * if the first argument is considered to be respectively less than, equal to, or greater than the second
+ * 
+ * @return integer
+ *   
  */
 function _l10n_update_compare($current, $update) {
-  return !empty($update->timestamp) && 
-    ($update->timestamp > $current->timestamp || $update->version != $current->version);
+  if ($current && $update) {
+    if ($current->timestamp == $update->timestamp) {
+      return 0;
+    }
+    else {
+      return $current->timestamp > $update->timestamp ? 1 : -1;
+    }    
+  }
+  elseif ($current && !$update) {
+    return 1;
+  }
+  elseif (!$current && $update) {
+    return -1;
+  }
+  else {
+    return 0;
+  }
 }
 
 /**
@@ -149,8 +171,8 @@ function l10n_update_check_projects($projects, $languages, $local = TRUE, $remot
   foreach ($projects as $name => $project) {
     foreach ($languages as $lang) {
       $source = l10n_update_build_source($project, $lang);
-      if(l10n_update_check_source($source, $local, $remote)) {
-        $result[$name][$lang] = $source;
+      if ($update = l10n_update_check_source($source, $local, $remote)) {
+        $result[$name][$lang] = $update;
       }
     }
   }
@@ -460,6 +482,41 @@ function _l10n_update_process_info_list(&$projects, $list, $project_type) {
 }
 
 /**
+ * Prepare update list
+ * 
+ * @param $updates
+ *   Update sources array that may be indexed in multiple ways
+ * @param $projects
+ *   Array of project names to be included, others will be filtered out
+ * @param $languages
+ *   Array of language codes to be included, others will be filtered out
+ * @param $directory
+ *   Download directory for files to be kept or files to be imported. Will be applied to sources without filepath
+ *
+ * @return
+ *   Plain array of filtered updates with directory applied
+ */
+function _l10n_update_prepare_updates($updates, $projects = NULL, $languages = NULL, $directory = NULL) {
+  $result = array();
+  foreach ($updates as $key => $update) {
+    if (is_array($update)) {
+      // It is a sub array of updates yet, process and merge
+      $result = array_merge($result, _l10n_update_prepare_updates($update, $projects, $languages, $directory));
+    }
+    elseif ((!$projects || in_array($update->project, $projects)) && (!$languages || in_array($update->language, $languages))) {
+      if ($directory && empty($update->filepath)) {
+        // If we have a destination folder set just if we have no filepath
+        if (empty($update->filepath)) {
+          $update->filepath = $directory . '/' . $update->filename;
+          $update->keep = TRUE;
+        }
+      }
+      $result[] = $update;
+    }
+  }
+  return $result;
+}
+/**
  * Build abstract translation source, to be mapped to a file or a download
  */
 function l10n_update_build_source($project, $langcode, $filename = L10N_UPDATE_DEFAULT_FILENAME) {
@@ -477,8 +534,7 @@ function l10n_update_build_string($project, $template) {
   $variables = array(
     '%project' => $project->name,
     '%release' => $project->version,
-    // For core path replace dot by slash
-    '%core' => strtr($project->core, array('.' => '-')),
+    '%core' => $project->core,
     '%language' => isset($project->language) ? $project->language : '%language',
     '%filename' => isset($project->filename) ? $project->filename : '%filename',
   );
@@ -488,13 +544,22 @@ function l10n_update_build_string($project, $template) {
 /**
  * Check local and remote sources for the file
  */
-function l10n_update_check_source($source, $local = TRUE, $remote = TRUE) {
-  if ($local && $file = l10n_update_check_source_file($source)) {
-    return $file;
+function l10n_update_check_source($source, $check_local = TRUE, $check_remote = TRUE) {
+  $local = $remote = NULL;
+  if ($check_local) {
+    $check = clone $source;
+    if (l10n_update_check_source_file($check)) {
+      $local = $check;
+    }
   }
-  if ($remote && $response = l10n_update_check_source_download($source)) {
-    return $response;
+  if ($check_remote) {
+    $check = clone $source;
+    if (l10n_update_check_source_download($check)) {
+      $remote = $check;
+    }
   }
+  // Get remote if newer than local only, they both can be empty
+  return _l10n_update_compare($local, $remote) < 0 ? $remote : $local;
 }
 
 /**
