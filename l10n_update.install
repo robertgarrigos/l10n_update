@@ -1,12 +1,12 @@
-<?php 
+<?php
 // $Id$
 /**
  * @file
- *   Install file for l10n remote updates
+ *   Install file for l10n remote updates.
  */
 
 /**
- * Implementation of hook_schema()
+ * Implementation of hook_schema().
  */
 function l10n_update_schema() {
   $schema['l10n_update_project'] = array(
@@ -148,41 +148,39 @@ function l10n_update_schema() {
       ),
     ),
     'primary key' => array('project', 'language'),
-  );    
+  );
   return $schema;
 }
 
 /**
- * Add status field to translations table
+ * Add status field to translations table.
  */
 function l10n_update_schema_alter(&$schema) {
   $schema['locales_target']['fields']['status'] = array('type' => 'int', 'not null' => TRUE, 'default' => 0);
 }
 
 /**
- * Implementation of hook_install()
+ * Implementation of hook_install().
  */
 function l10n_update_install() {
-  $ret = array();  
+  $ret = array();
   drupal_install_schema('l10n_update');
   db_add_field($ret, 'locales_target', 'status', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
   return $ret;
 }
 
 /**
- * Implementation of hook_install()
+ * Implementation of hook_uninstall().
  */
 function l10n_update_uninstall() {
-  $ret = array();  
+  $ret = array();
   drupal_uninstall_schema('l10n_update');
   db_drop_field($ret, 'locales_target', 'status');
   return $ret;
 }
 
 /**
- * Implementation of hook_requirements
- * @param $phase
- * @return unknown_type
+ * Implementation of hook_requirements().
  */
 function l10n_update_requirements($phase) {
   if ($phase == 'runtime') {
@@ -214,10 +212,10 @@ function l10n_update_requirements($phase) {
 }
 
 /**
- * Add status field to locales_target
+ * Add status field to locales_target.
  */
 function l10n_update_update_6001() {
-  $ret = array();  
+  $ret = array();
   db_add_field($ret, 'locales_target', 'status', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
-  return $ret;  
+  return $ret;
 }

@@ -2,17 +2,25 @@
 // $Id$
 /**
  * @file
- *   Download remote translations from server
- *   
- * @todo Implement updates on cron
- * @todo Fetch information from info files
+ *   Download remote translations from server.
+ *
+ * @todo Implement updates on cron.
+ * @todo Fetch information from info files.
  */
 
-// Update mode: Remote server
+/**
+ * Update mode: Remote server.
+ */
 define('L10N_UPDATE_CHECK_REMOTE', 1);
-// Update mode: Local server
+
+/**
+ * Update mode: Local server.
+ */
 define('L10N_UPDATE_CHECK_LOCAL', 2);
-// Update mode: both
+
+/**
+ * Update mode: both.
+ */
 define('L10N_UPDATE_CHECK_ALL', L10N_UPDATE_CHECK_REMOTE | L10N_UPDATE_CHECK_LOCAL);
 
 /**
@@ -48,7 +56,7 @@ function l10n_update_menu() {
 }
 
 /**
- * Implemenation of hook_menu_alter()
+ * Implemenation of hook_menu_alter().
  */
 function l10n_update_menu_alter(&$menu) {
   // Redirect l10n_client AJAX callback path for strings.
@@ -56,33 +64,33 @@ function l10n_update_menu_alter(&$menu) {
 }
 
 /**
- * Implementation of hook_cron()
+ * Implementation of hook_cron().
  */
 function l10n_update_cron() {
   if ($time = variable_get('l10n_update_check_frequency', 0)) {
     if (time() - variable_get('l10n_update_last_check', 0) > $time) {
       module_load_include('inc', 'l10n_update');
       _l10n_update_refresh();
-    }    
+    }
   }
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implementation of hook_form_alter().
  */
 function l10n_update_form_alter(&$form, $form_state, $form_id){
   if ($form_id == 'locale_translate_edit_form') {
     // Replace the submit callback by our own customized version
     $form['#submit'] = array('l10n_update_locale_translate_edit_form_submit');
-  }  
+  }
 }
 
 /**
- * Process string editing form submissions marking translations as customized
+ * Process string editing form submissions marking translations as customized.
  *
  * Saves all translations of one string submitted from a form.
- * 
- * @todo Just mark as customized when string changed
+ *
+ * @todo Just mark as customized when string changed.
  */
 function l10n_update_locale_translate_edit_form_submit($form, &$form_state) {
   module_load_include('inc', 'l10n_update');
@@ -122,7 +130,7 @@ function l10n_update_locale_translate_edit_form_submit($form, &$form_state) {
  */
 function l10n_update_client_save_string() {
   global $user, $language;
-  
+
   if (user_access('use on-page translation')) {
     if (isset($_POST['source']) && isset($_POST['target']) && !empty($_POST['form_token']) && drupal_valid_token($_POST['form_token'], 'l10n_client_form')) {
       module_load_include('inc', 'l10n_update');
@@ -130,7 +138,7 @@ function l10n_update_client_save_string() {
       _l10n_update_locale_import_one_string_db($report, $language->language, $_POST['source'], $_POST['target'], 'default', NULL, LOCALE_IMPORT_OVERWRITE, L10N_UPDATE_STRING_CUSTOM);
       cache_clear_all('locale:', 'cache', TRUE);
       _locale_invalidate_js($language->language);
-      
+
       // Submit to remote server if enabled.
       if (variable_get('l10n_client_use_server', FALSE) && user_access('submit translations to localization server') && !empty($user->l10n_client_key)) {
         l10n_client_submit_translation($language->language, $_POST['source'], $_POST['target'], $user->l10n_client_key, l10n_client_user_token($user));
@@ -140,13 +148,13 @@ function l10n_update_client_save_string() {
 }
 
 /**
- * Get list of projects
- * 
+ * Get list of projects-
+ *
  * Atm, this is provided by modules implementing the l10n_update hook.
  * But in the future we might be able to fetch it from install files.
  */
 function l10n_update_get_projects($rebuild = NULL) {
-  static $projects;  
+  static $projects;
 
   if ($rebuild) {
     $current = l10n_update_get_projects(FALSE);
@@ -172,14 +180,14 @@ function l10n_update_get_projects($rebuild = NULL) {
 }
 
 /**
- * Save project data
+ * Save project data.
  */
 function l10n_update_save_project($project, $current = NULL) {
   if ($current) {
     $update = array('name');
     // If version changed, update all releases
     if ($project->version != $current->version) {
-      
+
     }
   }
   else {
@@ -187,8 +195,9 @@ function l10n_update_save_project($project, $current = NULL) {
   }
   return drupal_write_record('l10n_update_project', $project, $update);
 }
+
 /**
- * Build project list
+ * Build project list.
  */
 function l10n_update_build_projects() {
   module_load_include('compare.inc', 'update');
@@ -220,14 +229,15 @@ function l10n_update_build_projects() {
 }
 
 /**
- * Get update history
- * 
- * Returns an array indexed by project name
- * For each project there are updates indexed by language
+ * Get update history.
+ *
+ * @return
+ *   An array indexed by project name. For each project there are updates
+ *   indexed by language.
  */
 function l10n_update_get_history($refresh = NULL) {
   static $status;
-  
+
   if ($refresh || !isset($status)) {
     // Now add downloads history to projects
     $result = db_query("SELECT * FROM {l10n_update_file}");
@@ -235,24 +245,23 @@ function l10n_update_get_history($refresh = NULL) {
       $status[$update->project][$update->language] = $update;
     }
   }
-  
+
   return $status;
 }
 
 /**
- * Refresh project information
+ * Refresh project information.
  */
 function l10n_update_refresh_history() {
   $projects = l10n_update_get_projects();
   $updates = l10n_update_get_history();
-  
+
   $changes = 0;
   foreach ($projects as $name => &$project) {
     if (!empty($updates[$name])) {
       // Check versions for these updates
-      
       drupal_write_record('l10n_update_project', $project);
-      $changes++;     
+      $changes++;
     }
     elseif ($updates[$name]->version != $project['version']) {
       // Update project version
@@ -266,7 +275,7 @@ function l10n_update_refresh_history() {
 }
 
 /**
- * Get language list
+ * Get language list.
  */
 function l10n_update_language_list($field = 'name') {
   $languages = locale_language_list('name');
@@ -292,7 +301,7 @@ function l10n_update_theme() {
     ),
     'l10n_update_version_status' => array(
       'arguments' => array('status' => NULL),
-      'file' => 'l10n_update.admin.inc',    
+      'file' => 'l10n_update.admin.inc',
     ),
   );
 }
@@ -309,15 +318,15 @@ function _l10n_update_no_data() {
 }
 
 /**
- * Fetch update information for all projects / all languages
- * 
- * We refresh anyway if the data is older than a day
- * 
- * @return array()
- *   Available releases indexed by project and language
+ * Fetch update information for all projects / all languages.
+ *
+ * We refresh anyway if the data is older than a day.
+ *
+ * @return
+ *   Array of available releases indexed by project and language.
  */
-function l10n_update_available_releases($refresh = FALSE) {  
-  $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600; 
+function l10n_update_available_releases($refresh = FALSE) {
+  $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600;
   if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && (!$frequency || $cache->created > time() - $frequency)) {
     return $cache->data;
   }
@@ -334,7 +343,7 @@ function l10n_update_available_releases($refresh = FALSE) {
 }
 
 /**
- * Get available updates
+ * Get available updates.
  */
 function l10n_update_available_updates($refresh = NULL) {
   module_load_include('inc', 'l10n_update');
