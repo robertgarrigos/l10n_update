@@ -42,7 +42,7 @@ function l10n_update_admin_overview() {
   if ($projects && $languages) {
     $history = l10n_update_get_history();
     $available = l10n_update_available_releases();
-    $updates = _l10n_update_compare_multiple($projects, $history, $available);
+    $updates = l10n_update_build_updates($history, $available);
     $output = theme('l10n_update_project_status', $projects, $languages, $history, $available, $updates);
     $output .= drupal_get_form('l10n_update_admin_import_form', $projects, $updates);
   }
@@ -157,31 +157,6 @@ function l10n_update_admin_settings_form() {
     '#description' => t('Local directory, relative to your Drupal install, for storing downloaded files so they can be reused by other installs.'),
   );
   return system_settings_form($form);
-}
-
-/**
- * Fetch update information for all projects / all languages
- * 
- * We refresh anyway if the data is older than a day
- * 
- * @return array()
- *   Available releases indexed by project and language
- */
-function l10n_update_available_releases($refresh = FALSE) {  
-  $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600; 
-  if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && (!$frequency || $cache->created > time() - $frequency)) {
-    return $cache->data;
-  }
-  else {
-    module_load_include('inc', 'l10n_update');
-    $projects = l10n_update_get_projects(TRUE);
-    $languages = l10n_update_language_list();
-    $local = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_LOCAL;
-    $remote = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_REMOTE;
-    $available = l10n_update_check_projects($projects, array_keys($languages), $local, $remote);
-    cache_set('l10n_update_available_releases', $available, 'cache', $frequency ? time() + $frequency : CACHE_PERMANENT);
-    return $available;
-  }
 }
 
 /**

@@ -307,3 +307,45 @@ function _l10n_update_no_data() {
     '@check_manually' => url('admin/build/translate/update', array('query' => $destination)),
   ));
 }
+
+/**
+ * Fetch update information for all projects / all languages
+ * 
+ * We refresh anyway if the data is older than a day
+ * 
+ * @return array()
+ *   Available releases indexed by project and language
+ */
+function l10n_update_available_releases($refresh = FALSE) {  
+  $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600; 
+  if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && (!$frequency || $cache->created > time() - $frequency)) {
+    return $cache->data;
+  }
+  else {
+    module_load_include('inc', 'l10n_update');
+    $projects = l10n_update_get_projects(TRUE);
+    $languages = l10n_update_language_list();
+    $local = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_LOCAL;
+    $remote = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_REMOTE;
+    $available = l10n_update_check_projects($projects, array_keys($languages), $local, $remote);
+    cache_set('l10n_update_available_releases', $available, 'cache', $frequency ? time() + $frequency : CACHE_PERMANENT);
+    return $available;
+  }
+}
+
+/**
+ * Get available updates
+ */
+function l10n_update_available_updates($refresh = NULL) {
+  module_load_include('inc', 'l10n_update');
+  if ($available = l10n_update_available_releases($refresh)) {
+    if ($history = l10n_update_get_history()) {
+      if ($available = l10n_update_available_releases()) {
+        return l10n_update_build_updates($history, $available);
+      }
+      else {
+        return $available;
+      }
+    }
+  }
+}

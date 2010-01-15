@@ -104,13 +104,13 @@ function l10n_update_project_get_release($name, $langcode, $version, $server = N
 }
 
 /**
- * Compare and get list of downloadable updates
+ * Compare available releases with history and get list of downloadable updates
  */
-function _l10n_update_compare_multiple($projects, $history, $available) {
+function l10n_update_build_updates($history, $available) {
    $updates = array();
    foreach ($available as $name => $project_updates) {    
      foreach ($project_updates as $lang => $update) {
-       if (!empty($projects[$name]) && !empty($update->timestamp)) {
+       if (!empty($update->timestamp)) {
          $current = !empty($history[$name][$lang]) ? $history[$name][$lang] : NULL;
          // Add when not current, timestamp newer or version difers (newer version)
          if (_l10n_update_compare($current, $update) > 1 || $current->version != $update->version) {

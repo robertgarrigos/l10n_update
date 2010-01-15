@@ -186,16 +186,9 @@ function l10n_update_uninstall() {
  */
 function l10n_update_requirements($phase) {
   if ($phase == 'runtime') {
-    if ($available = l10n_update_available_releases(FALSE)) {
-      $projects = l10n_update_get_projects();
-      $languages = l10n_update_language_list();
+    if (l10n_update_get_projects() && l10n_update_language_list()) {
       $requirements['l10n_update']['title'] = t('Translation update status');
-      if ($projects && $languages) {
-        module_load_include('inc', 'l10n_udpate');
-        $history = l10n_update_get_history();
-        $updates = _l10n_update_compare($projects, $history, $available);
-      }
-      if ($updates) {
+      if (l10n_update_available_updates()) {
         $requirements['l10n_update']['severity'] = REQUIREMENT_WARNING;
         $requirements['l10n_update']['value'] = t('There are available updates');
         $requirements['l10n_update']['description'] = t('There are new or updated translations available for currently installed modules and themes. To check for updates, you can visit the <a href="@check_manually">translation update page</a>.', array(
