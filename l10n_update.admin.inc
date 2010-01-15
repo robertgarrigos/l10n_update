@@ -67,13 +67,17 @@ function l10n_update_admin_import_form($form_state, $projects, $updates) {
 
   if ($projects && $languages) {
     $form['updates'] = array('#type' => 'value', '#value' => $updates);
-
-    $form['languages'] = array(
+    $form['lang'] = array(
+      '#type' => 'fieldset',
       '#title' => t('Languages'),
+      '#collapsible' => TRUE, '#collapsed' => TRUE,
+      '#description' => t('Select one or more languages to download and update. If you select none, all of them will be updated.'),
+    );
+    $form['lang']['languages'] = array(
       '#type' => 'checkboxes',
       '#options' => $languages,
       '#default_value' => array(language_default('language')),
-      '#description' => t('Select one or more languages to download and update.'),
+      
     );
     $form['mode'] = array('#type' => 'radios',
       '#title' => t('Mode'),
@@ -100,7 +104,7 @@ function l10n_update_admin_import_form_submit($form, $form_state) {
     $languages = array_filter($form_state['values']['languages']);
     $updates = $form_state['values']['updates'];
     $mode = $form_state['values']['mode'];
-    // Filter out updates in other languages
+    // Filter out updates in other languages. If no languages, all of them will be updated
     $updates = _l10n_update_prepare_updates($updates, NULL, $languages,  variable_get('l10n_update_download_store', '')); 
     if ($languages && $projects && $updates) {
       module_load_include('batch.inc', 'l10n_update');
