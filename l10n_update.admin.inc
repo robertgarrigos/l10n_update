@@ -30,7 +30,7 @@ define('L10N_UPDATE_UNKNOWN', -2);
 define('L10N_UPDATE_NOT_FETCHED', -3);
 
 // Include l10n_update API
-include_once 'l10n_update.inc';
+include_once 'l10n_update.check.inc';
 
 /**
  * Admin overview page
@@ -104,15 +104,15 @@ function l10n_update_admin_import_form_submit($form, $form_state) {
     $languages = array_filter($form_state['values']['languages']);
     $updates = $form_state['values']['updates'];
     $mode = $form_state['values']['mode'];
-    // Filter out updates in other languages. If no languages, all of them will be updated
-    $updates = _l10n_update_prepare_updates($updates, NULL, $languages,  variable_get('l10n_update_download_store', ''));
-    if ($languages && $projects && $updates) {
+    if ($projects && $updates) {
       module_load_include('batch.inc', 'l10n_update');
+      // Filter out updates in other languages. If no languages, all of them will be updated
+      $updates = _l10n_update_prepare_updates($updates, NULL, $languages); 
       $batch = l10n_update_batch_multiple($updates, $mode);
       batch_set($batch);
     }
     else {
-      drupal_set_message(t('No packages or languages selected.'), 'error');
+      drupal_set_message(t('Cannot find any translation updates.'), 'error');
     }
   }
   elseif ($op == t('Refresh information')) {

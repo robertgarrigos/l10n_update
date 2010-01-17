@@ -65,13 +65,13 @@ function l10n_update_menu_alter(&$menu) {
 
 /**
  * Implementation of hook_cron().
+ * 
+ * Check one project/language at a time, download and import if update available 
  */
 function l10n_update_cron() {
-  if ($time = variable_get('l10n_update_check_frequency', 0)) {
-    if (time() - variable_get('l10n_update_last_check', 0) > $time) {
-      module_load_include('inc', 'l10n_update');
-      _l10n_update_refresh();
-    }
+  if ($frequency = variable_get('l10n_update_check_frequency', 0)) {
+    module_load_include('inc', 'l10n_update');
+    l10n_update_check(1, time() - $frequency * 24 * 3600);
   }
 }
 
@@ -148,84 +148,33 @@ function l10n_update_client_save_string() {
 }
 
 /**
- * Get list of projects-
- *
- * Atm, this is provided by modules implementing the l10n_update hook.
- * But in the future we might be able to fetch it from install files.
+ * Get stored list of projects
+ * 
+ * If not projects stored, like when first run, it will cause a rebuild
  */
-function l10n_update_get_projects($rebuild = NULL) {
-  static $projects;
+function l10n_update_get_projects($refresh = FALSE, $disabled = FALSE) {
+  static $projects, $enabled, $rebuild;  
 
-  if ($rebuild) {
-    $current = l10n_update_get_projects(FALSE);
-    // Set all existing projects as disabled but don't delete any then update new ones
-    db_query('UPDATE {l10n_update_project} SET status = 0');
-    foreach (l10n_update_build_projects() as $project => $data) {
-      $update = empty($current[$project]) ? array() : array('name');
-      drupal_write_record('l10n_update_project', $data, $update);
-    }
-  }
-  if (!isset($projects)) {
-    $projects = array();
+  if (!isset($projects) || $refresh) {
+    $projects = $enabled = array();
     $result = db_query('SELECT * FROM {l10n_update_project}');
     while ($project = db_fetch_object($result)) {
       $projects[$project->name] = $project;
+      if ($project->status) {
+        $enabled[$project->name] = $project;
+      }
     }
   }
-  // If no projects yet we may force a rebuild
+  // If no projects we may need a rebuild
   if (!$projects && !isset($rebuild)) {
-    return l10n_update_get_projects(TRUE);
-  }
-  return $projects;
-}
-
-/**
- * Save project data.
- */
-function l10n_update_save_project($project, $current = NULL) {
-  if ($current) {
-    $update = array('name');
-    // If version changed, update all releases
-    if ($project->version != $current->version) {
-
-    }
+    module_load_include('inc', 'l10n_update');
+    $rebuild = TRUE;
+    l10n_update_build_projects();
+    return l10n_update_get_projects(TRUE, $disabled);
   }
   else {
-    $update = array();
+   return $disabled ? $enabled : $projects;
   }
-  return drupal_write_record('l10n_update_project', $project, $update);
-}
-
-/**
- * Build project list.
- */
-function l10n_update_build_projects() {
-  module_load_include('compare.inc', 'update');
-  module_load_include('inc', 'l10n_update');
-  //$projects = update_get_projects();
-  $projects = array();
-  _update_process_info_list($projects, module_rebuild_cache(), 'module');
-  _update_process_info_list($projects, system_theme_data(), 'theme');
-  // Allow other modules to alter projects before fetching and comparing.
-  drupal_alter('update_projects', $projects);
-  // Prepare project data
-  foreach ($projects as $name => $data) {
-    $data += array(
-      'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
-      'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
-      'l10n_server' => isset($data['info']['l10n_server']) ? $data['info']['l10n_server'] : variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
-      'status' => 1,
-    );
-    $project = (object)$data;
-    if (!isset($project->l10n_path)) {
-      $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
-      $project->filename = l10n_update_build_string($project, $filename);
-      $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
-      $project->l10n_path = l10n_update_build_string($project, $filepath);
-    }
-    $projects[$name] = $project;
-  }
-  return $projects;
 }
 
 /**
@@ -318,35 +267,10 @@ function _l10n_update_no_data() {
 }
 
 /**
- * Fetch update information for all projects / all languages.
- *
- * We refresh anyway if the data is older than a day.
- *
- * @return
- *   Array of available releases indexed by project and language.
- */
-function l10n_update_available_releases($refresh = FALSE) {
-  $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600;
-  if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && (!$frequency || $cache->created > time() - $frequency)) {
-    return $cache->data;
-  }
-  else {
-    module_load_include('inc', 'l10n_update');
-    $projects = l10n_update_get_projects(TRUE);
-    $languages = l10n_update_language_list();
-    $local = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_LOCAL;
-    $remote = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_REMOTE;
-    $available = l10n_update_check_projects($projects, array_keys($languages), $local, $remote);
-    cache_set('l10n_update_available_releases', $available, 'cache', $frequency ? time() + $frequency : CACHE_PERMANENT);
-    return $available;
-  }
-}
-
-/**
  * Get available updates.
  */
 function l10n_update_available_updates($refresh = NULL) {
-  module_load_include('inc', 'l10n_update');
+  module_load_include('check.inc', 'l10n_update');
   if ($available = l10n_update_available_releases($refresh)) {
     if ($history = l10n_update_get_history()) {
       if ($available = l10n_update_available_releases()) {

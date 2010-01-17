@@ -4,7 +4,7 @@
  * @file
  *   Reusable API for creating and running l10n update batches
  */
-include_once 'l10n_update.inc';
+include_once 'l10n_update.check.inc';
 
 /**
  * Create a batch to just download files
@@ -83,9 +83,7 @@ function _l10n_update_create_batch($operations = array()) {
  */
 function _l10n_update_batch_download($update, &$context) {
   $t = get_t();
-  $file = l10n_update_download_file($update->fileurl, !empty($update->filepath) ? $update->filepath : NULL);
-  if ($file) {
-    $update->filepath = $file;
+  if (l10n_update_source_download($update)) {
     $context['message'] = $t('Importing downloaded translation: %url.', array('%url' => $update->fileurl));
     $context['results'][] = $update;
   }
@@ -99,12 +97,7 @@ function _l10n_update_batch_download($update, &$context) {
  */
 function _l10n_update_batch_history($update, &$context) {
   if ($update = _l10n_update_batch_param($update, $context)) {
-    // If it's a downloaded file and not marked for keeping, delete file
-    if ($file->type == 'download' && empty($file->keep)) {
-      file_delete($file->filepath);
-      $file->filepath = '';
-    }
-    l10n_update_file_history($update);
+    l10n_update_source_history($update);
     $context['results'][] = $update;
   }
 }
@@ -123,8 +116,7 @@ function _l10n_update_batch_history($update, &$context) {
 function _l10n_update_batch_import($file, $mode, &$context) {
   $t = get_t();
   if ($file = _l10n_update_batch_param($file, $context)) {
-    if (l10n_update_import_file($file->filepath, $file->language, $mode)) {
-      $file->import_date = time();
+    if (l10n_update_source_import($file, $mode)) {
       $context['results'][] = $file;
       if ($file->type == 'download') {
         drupal_set_message($t('Successfully downloaded and imported translation from %url', array('%url' => $update->fileurl)));        

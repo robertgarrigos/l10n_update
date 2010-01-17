@@ -26,7 +26,6 @@ define('L10N_UPDATE_STRING_CUSTOM', 1);
 function l10n_update_download_import($download_url, $locale, $mode = LOCALE_IMPORT_OVERWRITE) {
   if ($file = l10n_update_download_file($download_url)) {
     $result = l10n_update_import_file($file, $locale, $mode);
-    file_delete($file);
     return $result;
   }
 }
@@ -94,64 +93,6 @@ function l10n_update_get_language_names($string_list) {
 }
 
 /**
- * Get update information about single release
- */
-function l10n_update_project_get_release($name, $langcode, $version, $server = NULL) {
-  $projects[] = _l10n_update_build_project($name, $version, $server);
-  if ($updates = _l10n_update_fetch_releases($projects, $langcode)) {
-    return _l10n_update_project_release($updates[$name], $langcode, $version);
-  }
-}
-
-/**
- * Compare available releases with history and get list of downloadable updates
- */
-function l10n_update_build_updates($history, $available) {
-   $updates = array();
-   foreach ($available as $name => $project_updates) {    
-     foreach ($project_updates as $lang => $update) {
-       if (!empty($update->timestamp)) {
-         $current = !empty($history[$name][$lang]) ? $history[$name][$lang] : NULL;
-         // Add when not current, timestamp newer or version difers (newer version)
-         if (_l10n_update_compare($current, $update) > 1 || $current->version != $update->version) {
-           $updates[$name][$lang] = $update;
-         }
-       }
-     }
-   }
-   return $updates;
- }
-
-/**
- * Compare two update sources, looking for the newer one (bigger timestamp)
- * 
- * This function can be used as a compare callback. It returns an integer less than, equal to, or greater than zero
- * if the first argument is considered to be respectively less than, equal to, or greater than the second
- * 
- * @return integer
- *   
- */
-function _l10n_update_compare($current, $update) {
-  if ($current && $update) {
-    if ($current->timestamp == $update->timestamp) {
-      return 0;
-    }
-    else {
-      return $current->timestamp > $update->timestamp ? 1 : -1;
-    }    
-  }
-  elseif ($current && !$update) {
-    return 1;
-  }
-  elseif (!$current && $update) {
-    return -1;
-  }
-  else {
-    return 0;
-  }
-}
-
-/**
  * Build project data as an object
  */
 function _l10n_update_build_project($name, $version = NULL, $server = L10N_UPDATE_DEFAULT_SERVER, $path = L10N_UPDATE_DEFAULT_URL) {
@@ -161,22 +102,6 @@ function _l10n_update_build_project($name, $version = NULL, $server = L10N_UPDAT
   $project->l10n_server = $server;
   $project->l10n_path = $path;
   return $project;
-}
-
-/**
- * Check latest release for project, languages
- */
-function l10n_update_check_projects($projects, $languages, $local = TRUE, $remote = TRUE) {
-  $result = array();
-  foreach ($projects as $name => $project) {
-    foreach ($languages as $lang) {
-      $source = l10n_update_build_source($project, $lang);
-      if ($update = l10n_update_check_source($source, $local, $remote)) {
-        $result[$name][$lang] = $update;
-      }
-    }
-  }
-  return $result;
 }
 
 /**
@@ -409,125 +334,6 @@ function l10n_update_http_request($url, $headers = array(), $method = 'GET', $da
 }
 
 /**
- * Get a unique key for this site, not identifiable but usable to track the requests
- * from the same server.
- * 
- * We cannot use the private key before the database is created.
- * 
- * @return
- *   The site key.
- */
-function l10n_update_get_site_key() {
-  global $base_url;
-  
-  return md5('l10n_update' . $base_url . $_SERVER['SERVER_NAME'] . $_SERVER['SERVER_ADDR']);
-}
-
-/**
- * Populate an array of project data.
- */
-function _l10n_update_process_info_list(&$projects, $list, $project_type) {
-  foreach ($list as $file) {
-    if (empty($file->status)) {
-      // Skip disabled modules or themes.
-      continue;
-    }
-
-    // Skip if the .info file is broken.
-    if (empty($file->info)) {
-      continue;
-    }
-
-    // If the .info doesn't define the 'project', try to figure it out.
-    if (!isset($file->info['project'])) {
-      $file->info['project'] = update_get_project_name($file);
-    }
-
-    // If we still don't know the 'project', give up.
-    if (empty($file->info['project'])) {
-      continue;
-    }
-
-    // If we don't already know it, grab the change time on the .info file
-    // itself. Note: we need to use the ctime, not the mtime (modification
-    // time) since many (all?) tar implementations will go out of their way to
-    // set the mtime on the files it creates to the timestamps recorded in the
-    // tarball. We want to see the last time the file was changed on disk,
-    // which is left alone by tar and correctly set to the time the .info file
-    // was unpacked.
-    if (!isset($file->info['_info_file_ctime'])) {
-      $info_filename = dirname($file->filename) .'/'. $file->name .'.info';
-      $file->info['_info_file_ctime'] = filectime($info_filename);
-    }
-
-    $project_name = $file->info['project'];
-    if (!isset($projects[$project_name])) {
-      // Only process this if we haven't done this project, since a single
-      // project can have multiple modules or themes.
-      $projects[$project_name] = array(
-        'name' => $project_name,
-        'info' => $file->info,
-        'datestamp' => isset($file->info['datestamp']) ? $file->info['datestamp'] : 0,
-        'includes' => array($file->name => $file->info['name']),
-        'type' => $project_name == 'drupal' ? 'core' : $project_type,
-        'version' => isset($file->info['version']) ? $file->info['version'] : '',
-        'core' => isset($file->info['core']) ? $file->info['core'] : '',
-      );
-    }
-    else {
-      $projects[$project_name]['includes'][$file->name] = $file->info['name'];
-      $projects[$project_name]['info']['_info_file_ctime'] = max($projects[$project_name]['info']['_info_file_ctime'], $file->info['_info_file_ctime']);
-    }
-  }
-}
-
-/**
- * Prepare update list
- * 
- * @param $updates
- *   Update sources array that may be indexed in multiple ways
- * @param $projects
- *   Array of project names to be included, others will be filtered out
- * @param $languages
- *   Array of language codes to be included, others will be filtered out
- * @param $directory
- *   Download directory for files to be kept or files to be imported. Will be applied to sources without filepath
- *
- * @return
- *   Plain array of filtered updates with directory applied
- */
-function _l10n_update_prepare_updates($updates, $projects = NULL, $languages = NULL, $directory = NULL) {
-  $result = array();
-  foreach ($updates as $key => $update) {
-    if (is_array($update)) {
-      // It is a sub array of updates yet, process and merge
-      $result = array_merge($result, _l10n_update_prepare_updates($update, $projects, $languages, $directory));
-    }
-    elseif ((!$projects || in_array($update->project, $projects)) && (!$languages || in_array($update->language, $languages))) {
-      if ($directory && empty($update->filepath)) {
-        // If we have a destination folder set just if we have no filepath
-        if (empty($update->filepath)) {
-          $update->filepath = $directory . '/' . $update->filename;
-          $update->keep = TRUE;
-        }
-      }
-      $result[] = $update;
-    }
-  }
-  return $result;
-}
-/**
- * Build abstract translation source, to be mapped to a file or a download
- */
-function l10n_update_build_source($project, $langcode, $filename = L10N_UPDATE_DEFAULT_FILENAME) {
-  $source = clone $project;
-  $source->project = $project->name;
-  $source->language = $langcode;
-  $source->filename = l10n_update_build_string($source, $filename);
-  return $source;
-}
-
-/**
  * Build abstract translation source, to be mapped to a file or a download
  */
 function l10n_update_build_string($project, $template) {
@@ -542,62 +348,37 @@ function l10n_update_build_string($project, $template) {
 }
 
 /**
- * Check local and remote sources for the file
+ * Build project list
  */
-function l10n_update_check_source($source, $check_local = TRUE, $check_remote = TRUE) {
-  $local = $remote = NULL;
-  if ($check_local) {
-    $check = clone $source;
-    if (l10n_update_check_source_file($check)) {
-      $local = $check;
+function l10n_update_build_projects() {
+  module_load_include('compare.inc', 'update');
+  module_load_include('inc', 'l10n_update');
+  //$projects = update_get_projects();
+  $projects = array();
+  $current = l10n_update_get_projects(NULL, TRUE);
+  _update_process_info_list($projects, module_rebuild_cache(), 'module');
+  _update_process_info_list($projects, system_theme_data(), 'theme');
+  // Allow other modules to alter projects before fetching and comparing.
+  drupal_alter('update_projects', $projects);
+  // Prepare project data
+  foreach ($projects as $name => $data) {
+    $data += array(
+      'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
+      'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
+      'l10n_server' => isset($data['info']['l10n_server']) ? $data['info']['l10n_server'] : variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
+      'status' => 1,
+    );
+    $project = (object)$data;
+    if (!isset($project->l10n_path)) {
+      $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
+      $project->filename = l10n_update_build_string($project, $filename);
+      $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
+      $project->l10n_path = l10n_update_build_string($project, $filepath);
     }
+    // Create / update project record
+    $update = empty($current[$name]) ? array() : array('name');
+    drupal_write_record('l10n_update_project', $project, $update);
+    $projects[$name] = $project;
   }
-  if ($check_remote) {
-    $check = clone $source;
-    if (l10n_update_check_source_download($check)) {
-      $remote = $check;
-    }
-  }
-  // Get remote if newer than local only, they both can be empty
-  return _l10n_update_compare($local, $remote) < 0 ? $remote : $local;
-}
-
-/**
- * Check download
- */
-function l10n_update_check_source_download($source) {
-  $url = l10n_update_build_string($source, $source->l10n_path);
-  $result = l10n_update_http_check($url);
-  if ($result && !empty($result->updated)) {
-    $source->type = 'download';
-    // There may have been redirects so we store the resulting url
-    $source->fileurl = $result->url;
-    $source->timestamp = $result->updated;
-    return $result;
-  } 
-}
-
-/**
- * Check whether we've got the file in the filesystem under 'translations'
- * 
- * It will search, similar to modules and themes:
- * - translations
- * - sites/all/translations
- * - sites/mysite/translations
- * 
- * Using name as the key will return just the last one found
- * 
- * @return Object
- *  File object if found (filename, basename, name)
- */
-function l10n_update_check_source_file($source, $directory = 'translations') {
-  $filename = preg_quote($source->filename) . '$';
-  // Using the 'name' key will return 
-  if ($files = drupal_system_listing($filename, $directory, 'name', 0)) {
-    $file = current($files);
-    $source->type = 'localfile';
-    $source->filepath = $file->filename;
-    $source->timestamp = filemtime($file->filename);
-    return $file;
-  }
+  return $projects;
 }
