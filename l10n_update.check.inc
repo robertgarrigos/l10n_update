@@ -93,8 +93,8 @@ function l10n_update_check($count, $before, $limit = 1) {
       if (!empty($projects[$check->name])) {
         $project = $projects[$check->name];
         $update = NULL;
-        $source = l10n_update_build_source($project, $check->lang);
-        if ($available = l10n_update_check_source($source, $local, $remote)) {
+        $source = l10n_update_source_build($project, $check->lang);
+        if ($available = l10n_update_source_check($source, $local, $remote)) {
           $current = $check->filename ? $check : NULL;
           if (!$current || _l10n_update_source_compare($current, $available) > 1 || $current->version != $available->version) {
             $update = $available;
@@ -102,7 +102,7 @@ function l10n_update_check($count, $before, $limit = 1) {
         }
         if ($update) {
           // The update functions will update data and timestamps too
-          l10n_update_source($update, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
+          l10n_update_source_update($update, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
           $files[] = $update;
         }
         elseif ($current) {
