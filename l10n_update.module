@@ -71,7 +71,8 @@ function l10n_update_menu_alter(&$menu) {
 function l10n_update_cron() {
   if ($frequency = variable_get('l10n_update_check_frequency', 0)) {
     module_load_include('check.inc', 'l10n_update');
-    l10n_update_check(1, time() - $frequency * 24 * 3600);
+    list($checked, $updated) = l10n_update_check_translations(1, time() - $frequency * 24 * 3600);
+    watchdog('l10n_update', 'Automatically checked @checked translations, updated @updated.', array('@checked' => count($checked), '@updated' => count($updated)));
   }
 }
 
@@ -79,10 +80,31 @@ function l10n_update_cron() {
  * Implementation of hook_form_alter().
  */
 function l10n_update_form_alter(&$form, $form_state, $form_id){
-  if ($form_id == 'locale_translate_edit_form') {
-    // Replace the submit callback by our own customized version
-    $form['#submit'] = array('l10n_update_locale_translate_edit_form_submit');
+  switch ($form_id) {
+    case 'locale_translate_edit_form':
+      // Replace the submit callback by our own customized version
+      $form['#submit'] = array('l10n_update_locale_translate_edit_form_submit');
+      break;
+    case 'system_modules':
+      $form['#submit'][] = 'l10n_update_system_modules_submit';
+      break;
   }
+}
+
+/**
+ * Rebuild project information, update status, etc... 
+ * 
+ * When this callback runs, locale module has already run and update cache is refreshed
+ */
+function l10n_update_system_modules_submit($form, $form_state) {
+  //dsm($form);
+  //dsm($form_state);
+  // Check we are not on the confirm form
+  if (!isset($form_state['storage'])) {
+    module_load_include('project.inc', 'l10n_update');
+    l10n_update_project_refresh();
+  }
+  else dsm("storage");
 }
 
 /**
@@ -153,9 +175,14 @@ function l10n_update_client_save_string() {
  * If not projects stored, like when first run, it will cause a rebuild
  */
 function l10n_update_get_projects($refresh = FALSE, $disabled = FALSE) {
-  static $projects, $enabled, $rebuild;  
+  static $projects, $enabled;  
 
   if (!isset($projects) || $refresh) {
+    if (variable_get('l10n_update_rebuild_projects', 0)) {
+      module_load_include('project.inc', 'l10n_update');
+      variable_del('l10n_update_rebuild_projects');
+      l10n_update_build_projects();
+    }
     $projects = $enabled = array();
     $result = db_query('SELECT * FROM {l10n_update_project}');
     while ($project = db_fetch_object($result)) {
@@ -165,24 +192,16 @@ function l10n_update_get_projects($refresh = FALSE, $disabled = FALSE) {
       }
     }
   }
-  // If no projects we may need a rebuild
-  if (!$projects && !isset($rebuild)) {
-    module_load_include('inc', 'l10n_update');
-    $rebuild = TRUE;
-    l10n_update_build_projects();
-    return l10n_update_get_projects(TRUE, $disabled);
-  }
-  else {
-   return $disabled ? $enabled : $projects;
-  }
+  return $disabled ? $projects : $enabled;
 }
 
 /**
  * Get update history.
  *
+ * @param $project
+ *   Optional project name
  * @return
- *   An array indexed by project name. For each project there are updates
- *   indexed by language.
+ *   An array of translation files indexed by project, language
  */
 function l10n_update_get_history($refresh = NULL) {
   static $status;
@@ -194,33 +213,7 @@ function l10n_update_get_history($refresh = NULL) {
       $status[$update->project][$update->language] = $update;
     }
   }
-
   return $status;
-}
-
-/**
- * Refresh project information.
- */
-function l10n_update_refresh_history() {
-  $projects = l10n_update_get_projects();
-  $updates = l10n_update_get_history();
-
-  $changes = 0;
-  foreach ($projects as $name => &$project) {
-    if (!empty($updates[$name])) {
-      // Check versions for these updates
-      drupal_write_record('l10n_update_project', $project);
-      $changes++;
-    }
-    elseif ($updates[$name]->version != $project['version']) {
-      // Update project version
-      $updates[$name]->version = $project['info']['version'];
-      drupal_write_record('l10n_update_project', $updates[$name], 'name');
-      $changes++;
-    }
-  }
-  // If any change it will be refreshed
-  return l10n_update_get_history($changes);
 }
 
 /**
@@ -272,13 +265,7 @@ function _l10n_update_no_data() {
 function l10n_update_available_updates($refresh = NULL) {
   module_load_include('check.inc', 'l10n_update');
   if ($available = l10n_update_available_releases($refresh)) {
-    if ($history = l10n_update_get_history()) {
-      if ($available = l10n_update_available_releases()) {
-        return l10n_update_build_updates($history, $available);
-      }
-      else {
-        return $available;
-      }
-    }
+    $history = l10n_update_get_history();
+    return l10n_update_build_updates($history, $available);
   }
 }

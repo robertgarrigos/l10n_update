@@ -44,13 +44,21 @@ function l10n_update_available_releases($refresh = FALSE) {
 
 /**
  * Check latest release for project, languages
+ * 
+ * @param $projects
+ *   Projects to check (objects)
+ * @param $languages
+ *   Array of language codes to check, none to check all
+ * @return array
+ *   Available sources indexed by project, language
  */
-function l10n_update_check_projects($projects, $languages, $local = TRUE, $remote = TRUE) {
+function l10n_update_check_projects($projects, $languages = NULL, $check_local = TRUE, $check_remote = TRUE) {
+  $languages = $languages ? $languages : array_keys(l10n_update_language_list());
   $result = array();
   foreach ($projects as $name => $project) {
     foreach ($languages as $lang) {
       $source = l10n_update_source_build($project, $lang);
-      if ($update = l10n_update_source_check($source, $local, $remote)) {
+      if ($update = l10n_update_source_check($source, $check_local, $check_remote)) {
         $result[$name][$lang] = $update;
       }
     }
@@ -75,21 +83,24 @@ function l10n_update_build_updates($history, $available) {
      }
    }
    return $updates;
- }
+}
+
 /**
  * Check updates for active projects and languages
  */
-function l10n_update_check($count, $before, $limit = 1) {
-  $files = array();
+function l10n_update_check_translations($count, $before, $limit = 1) {
+  $projects = l10n_update_get_projects();
+  $updated = $checked = array();
+  // Select active projects x languages ordered by last checked time
   $sql = "SELECT p.name, l.language AS lang, f.* FROM {l10n_update_project} p INNER JOIN {languages} l";
   $sql .= " LEFT JOIN {l10n_update_file} f ON p.name = f.project AND l.language = f.language";
   $sql .= " WHERE p.status = 1 AND l.enabled = 1 AND (f.status IS NULL OR f.status = 1 AND f.last_checked < %d) ORDER BY last_checked";
   $result = db_query_range($sql, $before, 0, $count);
   if ($result) {
-    $projects = l10n_update_get_projects();
     $local = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_LOCAL;
     $remote = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_REMOTE;
     while (($check = db_fetch_object($result)) && (count($files) <= $limit)) {
+      $checked[] = $check;
       if (!empty($projects[$check->name])) {
         $project = $projects[$check->name];
         $update = NULL;
@@ -103,7 +114,7 @@ function l10n_update_check($count, $before, $limit = 1) {
         if ($update) {
           // The update functions will update data and timestamps too
           l10n_update_source_update($update, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
-          $files[] = $update;
+          $updated[] = $update;
         }
         elseif ($current) {
           // No update available, just update timestamp for this row
@@ -117,7 +128,7 @@ function l10n_update_check($count, $before, $limit = 1) {
       }
     } 
   }
-  return $files;
+  return array($checked, $updated);
 }
 
 /**

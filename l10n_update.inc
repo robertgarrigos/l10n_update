@@ -347,38 +347,3 @@ function l10n_update_build_string($project, $template) {
   return strtr($template, $variables);
 }
 
-/**
- * Build project list
- */
-function l10n_update_build_projects() {
-  module_load_include('compare.inc', 'update');
-  module_load_include('inc', 'l10n_update');
-  //$projects = update_get_projects();
-  $projects = array();
-  $current = l10n_update_get_projects(NULL, TRUE);
-  _update_process_info_list($projects, module_rebuild_cache(), 'module');
-  _update_process_info_list($projects, system_theme_data(), 'theme');
-  // Allow other modules to alter projects before fetching and comparing.
-  drupal_alter('update_projects', $projects);
-  // Prepare project data
-  foreach ($projects as $name => $data) {
-    $data += array(
-      'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
-      'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
-      'l10n_server' => isset($data['info']['l10n_server']) ? $data['info']['l10n_server'] : variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
-      'status' => 1,
-    );
-    $project = (object)$data;
-    if (!isset($project->l10n_path)) {
-      $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
-      $project->filename = l10n_update_build_string($project, $filename);
-      $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
-      $project->l10n_path = l10n_update_build_string($project, $filepath);
-    }
-    // Create / update project record
-    $update = empty($current[$name]) ? array() : array('name');
-    drupal_write_record('l10n_update_project', $project, $update);
-    $projects[$name] = $project;
-  }
-  return $projects;
-}

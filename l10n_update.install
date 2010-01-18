@@ -166,6 +166,7 @@ function l10n_update_install() {
   $ret = array();
   drupal_install_schema('l10n_update');
   db_add_field($ret, 'locales_target', 'status', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+  variable_set('l10n_update_rebuild_projects', 1);
   return $ret;
 }
 

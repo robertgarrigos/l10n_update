@@ -31,6 +31,8 @@ define('L10N_UPDATE_NOT_FETCHED', -3);
 
 // Include l10n_update API
 include_once 'l10n_update.check.inc';
+// And project api
+include_once 'l10n_update.project.inc';
 
 /**
  * Admin overview page
@@ -96,7 +98,6 @@ function l10n_update_admin_import_form($form_state, $projects, $updates) {
  * Update form
  */
 function l10n_update_admin_import_form_submit($form, $form_state) {
-  module_load_include('inc', 'l10n_update');
   $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
   $projects = l10n_update_get_projects();
 
@@ -116,6 +117,7 @@ function l10n_update_admin_import_form_submit($form, $form_state) {
     }
   }
   elseif ($op == t('Refresh information')) {
+    l10n_update_build_projects();
     if ($available = l10n_update_available_releases(TRUE)) {
       drupal_set_message(t('Fetched information about available updates from the server'));
     }
