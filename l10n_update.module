@@ -24,6 +24,22 @@ define('L10N_UPDATE_CHECK_LOCAL', 2);
 define('L10N_UPDATE_CHECK_ALL', L10N_UPDATE_CHECK_REMOTE | L10N_UPDATE_CHECK_LOCAL);
 
 /**
+ * Implementation of hook_help().
+ */
+function l10n_update_help($path, $arg) {
+  switch ($path) {
+    case 'admin/build/translate/update':
+      $output = '<p>' . t('List of latest imported translations and available updates for each enabled project and language.') . '</p>';
+      $output .= '<p>' . t('If there are available updates you can click on Update for them to be downloaded and imported now or you can edit the configuration for them to be updated automatically on the <a href="@update-settings">Update settings page</a>', array('@update-settings' => url('admin/settings/language/configure/update'))) . '</p>';
+      return $output;
+      break;
+    case 'admin/settings/language/configure/update':
+      $output = '<p>' . t('These are the settings for the translation update system. To update your translations now, check out the <a href="@update-admin">Translation update administration page</a>.', array('@update-admin' => url('admin/build/translate/update'))) . '</p>';
+      return $output;
+      break;
+  }
+}
+/**
  * Implementation of hook_menu().
  */
 function l10n_update_menu() {
@@ -36,15 +52,9 @@ function l10n_update_menu() {
     'weight' => 20,
     'type' => MENU_LOCAL_TASK,
   );
-  $items['admin/build/translate/update/refresh'] = array(
-    'title' => 'Update',
-    'description' => 'Available updates',
-    'weight' => 10,
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $items['admin/build/translate/update/settings'] = array(
-    'title' => 'Settings',
-    'description' => 'Update configuration',
+  $items['admin/settings/language/configure/update'] = array(
+    'title' => 'Translation updates',
+    'description' => 'Automatic update configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('l10n_update_admin_settings_form'),
     'access arguments' => array('translate interface'),
