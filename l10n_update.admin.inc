@@ -214,7 +214,9 @@ function theme_l10n_update_project_status($projects, $languages, $history, $avai
     $title = isset($project->title) ? $project->title : $project->name;
     $row .= check_plain($title);
     $row .= ' ' . check_plain($project->version);
-    $row .= ' ' . l($project->l10n_server, $project->l10n_server);
+    if ($server = l10n_update_server($project->l10n_server)) {
+      $row .= ' ' . l($server['name'], $server['link']);
+    }
     $row .= "</div>\n";
 
     $row .= "<div class=\"versions\">\n";

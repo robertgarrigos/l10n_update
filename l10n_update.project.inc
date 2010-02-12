@@ -4,7 +4,17 @@
  * @file
  * Library for querying Drupal projects
  * 
- * Most code is taken from update module. We don't want to depend on it though as it may not be enabled.
+ * Most code is taken from update module. We don't want to depend on it though as it may not be enabled. 
+ * 
+ * For each project, the information about where to fetch translations may be specified in the info files
+ * as follows:
+ * 
+ * - Localization server to be used for this project. Defaults to http://localize.drupal.org
+ *   l10n server = http://localize.drupal.org
+ *   
+ * - Translation file URL template, will be used to build the file url to download
+ *   l10n path = http://ftp.drupal.org/files/translations/%core/%project/%project-%release.%language.po
+ *   (Alternatively you can use the %filename variable that will default to '%project-%release.%language.po')
  */
 
 /**
@@ -18,19 +28,22 @@ function l10n_update_build_projects() {
   $projects = l10n_update_project_list();
   // Mark all previous projects as disabled and store new project data
   db_query("UPDATE {l10n_update_project} SET status = 0");
+  $default_server = l10n_update_default_server();
   foreach ($projects as $name => $data) {
     $data += array(
       'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
       'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
-      'l10n_server' => isset($data['info']['l10n_server']) ? $data['info']['l10n_server'] : variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
+      // The project can have its own l10n server, we use default if not
+      'l10n_server' => isset($data['info']['l10n server']) ? $data['info']['l10n server'] : $default_server['name'],
+      // A project can provide the server url to fetch metadata, or the update url (path)
+      'l10n_url' => isset($data['info']['l10n url']) ? $data['info']['l10n url'] : NULL,
+      'l10n_path' => isset($data['info']['l10n path']) ? $data['info']['l10n path'] : NULL,
       'status' => 1,
     );
     $project = (object)$data;
-    if (!isset($project->l10n_path)) {
-      $filename = variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILENAME);
-      $project->filename = l10n_update_build_string($project, $filename);
-      $filepath = variable_get('l10n_update_default_url', L10N_UPDATE_DEFAULT_URL);
-      $project->l10n_path = l10n_update_build_string($project, $filepath);
+    // Unless the project provides a full l10n path (update url), we try to build one
+    if (!isset($project->l10n_path) && ($server = l10n_update_server($project->l10n_server, $project->l10n_url))) {
+      $project->l10n_path = l10n_update_build_string($project, $server['update_url']);
     }
     // Create / update project record
     $update = empty($current[$name]) ? array() : array('name');

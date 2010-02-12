@@ -11,14 +11,26 @@ include_once 'l10n_update.locale.inc';
 /**
  * Default update server, filename and URL
  */
-define('L10N_UPDATE_DEFAULT_SERVER', 'http://localize.drupal.org');
+define('L10N_UPDATE_DEFAULT_SERVER', 'localize.drupal.org');
+define('L10N_UPDATE_DEFAULT_SERVER_URL', 'http://ftp.drupal.org/files/translations/l10n_server.xml');
+define('L10N_UPDATE_DEFAULT_UPDATE_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%project-%release.%language.po');
+// Translation filename, will be used just for local imports
 define('L10N_UPDATE_DEFAULT_FILENAME', '%project-%release.%language.po');
-define('L10N_UPDATE_DEFAULT_URL', 'http://ftp.drupal.org/files/translations/%core/%project/%filename');
-
 // Translation status: String imported from po
 define('L10N_UPDATE_STRING_DEFAULT', 0);
 // Translation status: Custom string, overridden original import
 define('L10N_UPDATE_STRING_CUSTOM', 1);
+
+/**
+ * Retrive data for default server
+ */
+function l10n_update_default_server() {
+  return array(
+    'name' => variable_get('l10n_update_default_server', L10N_UPDATE_DEFAULT_SERVER),
+    'server_url' => variable_get('l10n_update_default_server_url', L10N_UPDATE_DEFAULT_SERVER_URL),
+    'update_url' => variable_get('l10n_update_default_update_url', L10N_UPDATE_DEFAULT_UPDATE_URL)
+  );
+}
 
 /**
  * Download and import remote file
@@ -155,6 +167,8 @@ function l10n_update_http_check($url, $headers = array()) {
  * 
  * We cannot use drupal_http_request() at install, see http://drupal.org/node/527484
  * 
+ * This one also handles FTP
+ * 
  * This is a flexible and powerful HTTP client implementation. Correctly handles
  * GET, POST, PUT or any other HTTP requests. Handles redirects.
  *
@@ -203,7 +217,7 @@ function l10n_update_http_request($url, $headers = array(), $method = 'GET', $da
       $port = isset($uri['port']) ? $uri['port'] : 443;
       $host = $uri['host'] . ($port != 443 ? ':'. $port : '');
       $fp = @fsockopen('ssl://'. $uri['host'], $port, $errno, $errstr, 20);
-      break;
+      break;  
     default:
       $result->error = 'invalid schema '. $uri['scheme'];
       return $result;

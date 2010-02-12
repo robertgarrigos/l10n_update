@@ -4,7 +4,6 @@
  * @file
  *   Download remote translations from server.
  *
- * @todo Implement updates on cron.
  * @todo Fetch information from info files.
  */
 
@@ -181,8 +180,6 @@ function l10n_update_client_save_string() {
 
 /**
  * Get stored list of projects
- * 
- * If not projects stored, like when first run, it will cause a rebuild
  */
 function l10n_update_get_projects($refresh = FALSE, $disabled = FALSE) {
   static $projects, $enabled;  
@@ -203,6 +200,57 @@ function l10n_update_get_projects($refresh = FALSE, $disabled = FALSE) {
     }
   }
   return $disabled ? $projects : $enabled;
+}
+
+/**
+ * Get server information, that can come from different sources
+ * - From server list provided by modules. They can provide full server information or just the url
+ * - From server_url in a project, we'll fetch latest data from the server itself
+ */
+function l10n_update_server($name, $url = NULL, $refresh = FALSE) {
+  static $info, $servers;
+  $cid = 'l10n_update_server:' . $name;
+  if ($refresh) {
+    unset($servers);
+    unset($info);
+    cache_clear_all($cid, 'cache');
+  }
+  // Retrieve server list from modules
+  if (!isset($servers)) {
+    $servers = module_invoke_all('l10n_servers');
+  }
+  if (!isset($info[$name])) {
+    if ($cache = cache_get($cid)) {
+      $info[$name] = $cache->data;
+    }
+    else {
+      require_once 'l10n_update.parser.inc';
+      if (!empty($servers[$name])) {
+        // The name is in our list, it can be full data or just an url
+        $server = $servers[$name];
+      }
+      else {
+        // This may be a new server provided by a module / package
+        $server = array('name' => $name, 'server_url' => $url);
+      }
+      // Now fetch server meta information form the server itself
+      if ($server = l10n_update_get_server($server)) {
+        cache_set($cid, $server);
+      }
+      // If no server information, this will be FALSE
+      $info[$name] = $server;
+    }
+  }
+  return isset($info[$name]) ? $info[$name] : NULL;
+}
+
+/**
+ * Implementation of hook_l10n_servers
+ */
+function l10n_update_l10n_servers() {
+  module_load_include('inc', 'l10n_update');
+  $server = l10n_update_default_server();
+  return array($server['name'] => $server );
 }
 
 /**
