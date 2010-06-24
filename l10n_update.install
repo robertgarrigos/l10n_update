@@ -177,6 +177,8 @@ function l10n_update_uninstall() {
   $ret = array();
   drupal_uninstall_schema('l10n_update');
   db_drop_field($ret, 'locales_target', 'status');
+  db_query("DELETE FROM {variable} WHERE name LIKE 'l10n_update%%'");
+  cache_clear_all('variables', 'cache');
   return $ret;
 }
 
