@@ -106,14 +106,11 @@ function l10n_update_form_alter(&$form, $form_state, $form_id){
  * When this callback runs, locale module has already run and update cache is refreshed
  */
 function l10n_update_system_modules_submit($form, $form_state) {
-  //dsm($form);
-  //dsm($form_state);
   // Check we are not on the confirm form
   if (!isset($form_state['storage'])) {
     module_load_include('project.inc', 'l10n_update');
     l10n_update_project_refresh();
   }
-  else dsm("storage");
 }
 
 /**
