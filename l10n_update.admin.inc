@@ -82,7 +82,7 @@ function l10n_update_admin_import_form($form_state, $projects, $updates) {
 
     );
     $form['mode'] = array('#type' => 'radios',
-      '#title' => t('Mode'),
+      '#title' => t('Update mode'),
       '#default_value' => variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP),
       '#options' => _l10n_update_admin_import_options(),
     );
@@ -137,7 +137,7 @@ function l10n_update_admin_settings_form() {
     '#options' => _l10n_update_admin_check_options(),
   );
   $form['l10n_update_import_mode'] = array('#type' => 'radios',
-    '#title' => t('Import mode'),
+    '#title' => t('Update mode'),
     '#default_value' => variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP),
     '#options' => _l10n_update_admin_import_options(),
   );
@@ -156,7 +156,7 @@ function l10n_update_admin_settings_form() {
     '#title' => t('Store downloaded files'),
     '#type' => 'textfield',
     '#default_value' => variable_get('l10n_update_download_store', ''),
-    '#description' => t('Local directory, relative to your Drupal install, for storing downloaded files so they can be reused by other installs.'),
+    '#description' => t('Local directory, relative to your Drupal install, for storing downloaded files so they can be reused by other installs. If left empty the downloaded translation will not be saved.'),
   );
   return system_settings_form($form);
 }
@@ -166,8 +166,8 @@ function l10n_update_admin_settings_form() {
  */
 function _l10n_update_admin_import_options() {
   return array(
-    LOCALE_IMPORT_OVERWRITE => t('Strings in the uploaded file replace existing ones, new ones are added'),
-    LOCALE_IMPORT_KEEP => t('Edited strings are kept, only default ones (previously imported) are overwritten and new strings are added')
+    LOCALE_IMPORT_OVERWRITE => t('Translation updates replace existing ones, new ones are added'),
+    LOCALE_IMPORT_KEEP => t('Edited translations are kept, only default ones (previously imported) are overwritten and new translations are added')
   );
 }
 /**
