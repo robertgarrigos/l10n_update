@@ -1,6 +1,0 @@
-; $Id$
-name = Locale updater
-description = Provides automatic downloads and updates for translations
-dependencies[] = locale
-core = 6.x
-package = Multilanguage
