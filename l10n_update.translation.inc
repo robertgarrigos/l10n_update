@@ -421,13 +421,31 @@ function _l10n_update_source_compare($source1, $source2) {
 function _l10n_update_default_update_options() {
   $options = array(
     'customized' => L10N_UPDATE_NOT_CUSTOMIZED,
-    'overwrite_options' => array(
-      'not_customized' => variable_get('l10n_update_overwrite_not_customized', TRUE),
-      'customized' => variable_get('l10n_update_overwrite_customized', FALSE),
-    ),
     'finish_feedback' => TRUE,
     'use_remote' => l10n_update_use_remote_source(),
   );
+
+  switch (variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP)) {
+    case LOCALE_IMPORT_OVERWRITE:
+      $options['overwrite_options'] = array(
+        'customized' => TRUE,
+        'not_customized' => TRUE,
+      );
+      break;
+    case L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED:
+      $options['overwrite_options'] = array(
+        'customized' => FALSE,
+        'not_customized' => TRUE,
+      );
+      break;
+    case LOCALE_IMPORT_KEEP:
+      $options['overwrite_options'] = array(
+        'customized' => FALSE,
+        'not_customized' => FALSE,
+      );
+      break;
+  }
+
   return $options;
 }
 

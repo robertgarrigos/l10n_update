@@ -249,22 +249,10 @@ function l10n_update_admin_settings_form($form, &$form_state) {
     '#description' => t('A path relative to the Drupal installation directory where translation files will be stored, e.g. sites/all/translations. Saved translation files can be reused by other installations.'),
   );
 
-  if (variable_get('l10n_update_overwrite_not_customized', TRUE) == FALSE) {
-    // Override none.
-    $default = LOCALE_IMPORT_KEEP;
-  }
-  elseif (variable_get('l10n_update_overwrite_customized', FALSE) == TRUE) {
-    // Override any.
-    $default = LOCALE_IMPORT_OVERWRITE;
-  }
-  else {
-    // Override non customized only.
-    $default = L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED;
-  }
-  $form['overwrite'] = array(
+  $form['l10n_update_import_mode'] = array(
     '#type' => 'radios',
     '#title' => t('Import behaviour'),
-    '#default_value' => $default,
+    '#default_value' => variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP),
     '#options' => array(
       LOCALE_IMPORT_KEEP => t("Don't overwrite existing translations."),
       L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED => t('Only overwrite imported translations, customized translations are kept.'),
@@ -281,22 +269,6 @@ function l10n_update_admin_settings_form($form, &$form_state) {
  * Submit handler form Update status form.
  */
 function l10n_update_admin_settings_form_submit($form, $form_state) {
-
-  switch ($form_state['values']['overwrite']) {
-    case LOCALE_IMPORT_OVERWRITE:
-      variable_set('l10n_update_overwrite_customized', TRUE);
-      variable_set('l10n_update_overwrite_not_customized', TRUE);
-      break;
-    case L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED:
-      variable_set('l10n_update_overwrite_customized', FALSE);
-      variable_set('l10n_update_overwrite_not_customized', TRUE);
-      break;
-    case LOCALE_IMPORT_KEEP:
-      variable_set('l10n_update_overwrite_customized', FALSE);
-      variable_set('l10n_update_overwrite_not_customized', FALSE);
-      break;
-  }
-
   // Invalidate the cached translation status when the configuration setting of
   // 'l10n_update_check_mode' or 'check_disabled' change.
   if ($form['l10n_update_check_mode']['#default_value'] != $form_state['values']['l10n_update_check_mode'] ||

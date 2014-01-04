@@ -178,10 +178,9 @@ function l10n_update_uninstall() {
   variable_del('l10n_update_default_filename');
   variable_del('l10n_update_default_update_url');
   variable_del('l10n_update_import_enabled');
+  variable_del('l10n_update_import_mode');
   variable_del('l10n_update_check_frequency');
   variable_del('l10n_update_last_check');
-  variable_del('l10n_update_overwrite_customized');
-  variable_del('l10n_update_overwrite_not_customized');
   variable_del('l10n_update_download_store');
   variable_del('l10n_update_translation_status');
   variable_del('l10n_update_check_mode');}
@@ -295,15 +294,15 @@ function l10n_update_update_7004() {
 /**
  * Migration to 7.x-2.x branch.
  */
-function l10n_update_update_7005() {
+function l10n_update_update_7200() {
   $path = variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
   if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY)) {
     watchdog('l10n_update', 'The directory %directory does not exist or is not writable.', array('%directory' => $path), WATCHDOG_ERROR);
   }
+  variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP);
 
   // Clean up deprecated variables.
   variable_del('l10n_update_default_server');
   variable_del('l10n_update_default_server_url');
-  variable_del('l10n_update_import_mode');
   variable_del('l10n_update_rebuild_projects');
 }
