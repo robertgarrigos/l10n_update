@@ -299,7 +299,19 @@ function l10n_update_update_7200() {
   if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY)) {
     watchdog('l10n_update', 'The directory %directory does not exist or is not writable.', array('%directory' => $path), WATCHDOG_ERROR);
   }
-  variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP);
+
+  // Translation source 'Remote server only' is no longer supported. Use 'Remote
+  // and local' instead.
+  $mode = variable_get('l10n_update_check_mode', L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL);
+  if ($mode == 1) {
+    variable_set('l10n_update_check_mode', L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL);
+  }
+
+  // Daily cron updates are no longer supported. Use weekly instead.
+  $frequency = variable_get('l10n_update_check_frequency', 0);
+  if ($frequency == 1) {
+    variable_get('l10n_update_check_frequency', 7);
+  }
 
   // Clean up deprecated variables.
   variable_del('l10n_update_default_server');
