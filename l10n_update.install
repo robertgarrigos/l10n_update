@@ -320,9 +320,9 @@ function l10n_update_update_7200() {
   }
 
   // Daily cron updates are no longer supported. Use weekly instead.
-  $frequency = variable_get('l10n_update_check_frequency', 0);
-  if ($frequency == 1) {
-    variable_get('l10n_update_check_frequency', 7);
+  $frequency = variable_get('l10n_update_check_frequency', '0');
+  if ($frequency == '1') {
+    variable_set('l10n_update_check_frequency', '7');
   }
 
   // Clean up deprecated variables.

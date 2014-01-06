@@ -62,7 +62,7 @@ class L10nUpdateCronTest extends L10nUpdateTestBase {
     // Test: Disable cron update and verify that no tasks are added to the
     // queue.
     $edit = array(
-      'l10n_update_check_frequency' => 0,
+      'l10n_update_check_frequency' => '0',
     );
     $this->drupalPost('admin/config/regional/language/update', $edit, t('Save configuration'));
 
@@ -77,7 +77,7 @@ class L10nUpdateCronTest extends L10nUpdateTestBase {
     // queue.
     // Set cron update to Weekly.
     $edit = array(
-      'l10n_update_check_frequency' => 7,
+      'l10n_update_check_frequency' => '7',
     );
     $this->drupalPost('admin/config/regional/language/update', $edit, t('Save configuration'));
 

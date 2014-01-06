@@ -320,7 +320,7 @@ function l10n_update_cron_fill_queue() {
   $updates = array();
 
   // Determine which project+language should be updated.
-  $last = REQUEST_TIME - variable_get('l10n_update_check_frequency', 0) * 3600 * 24;
+  $last = REQUEST_TIME - variable_get('l10n_update_check_frequency', '0') * 3600 * 24;
   $query = db_select('l10n_update_file', 'f');
   $query->join('l10n_update_project', 'p', 'p.name = f.project');
   $query->condition('f.last_checked', $last, '<');

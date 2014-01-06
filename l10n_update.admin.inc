@@ -215,7 +215,7 @@ function l10n_update_admin_settings_form($form, &$form_state) {
   $form['l10n_update_check_frequency'] = array(
     '#type' => 'radios',
     '#title' => t('Check for updates'),
-    '#default_value' => variable_get('l10n_update_check_frequency', 0),
+    '#default_value' => variable_get('l10n_update_check_frequency', '0'),
     '#options' => array(
       '0' => t('Never (manually)'),
       '7' => t('Weekly'),

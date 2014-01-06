@@ -188,7 +188,7 @@ function l10n_update_cron() {
   // and a translatable language was set.
   // Update tasks are added to the queue here but processed by Drupal's cron
   // using the cron worker defined in l10n_update_queue_info().
-  if ($frequency = variable_get('l10n_update_check_frequency', 0) && l10n_update_translatable_language_list()) {
+  if ($frequency = variable_get('l10n_update_check_frequency', '0') && l10n_update_translatable_language_list()) {
     module_load_include('translation.inc', 'l10n_update');
     l10n_update_cron_fill_queue();
   }
