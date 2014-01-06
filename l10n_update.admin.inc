@@ -244,7 +244,7 @@ function l10n_update_admin_settings_form($form, &$form_state) {
   $form['l10n_update_download_store'] = array(
     '#title' => t('Translations directory'),
     '#type' => 'textfield',
-    '#default_value' =>  variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH),
+    '#default_value' => variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH),
     '#required' => TRUE,
     '#description' => t('A path relative to the Drupal installation directory where translation files will be stored, e.g. sites/all/translations. Saved translation files can be reused by other installations.'),
   );

@@ -246,6 +246,13 @@ function l10n_update_requirements($phase) {
       }
     }
   }
+  if ($phase == 'update') {
+    // Make sure the 'translations' stream wrapper class gets registered.
+    // This is needed when upgrading to 7.x-2.x.
+    if (!class_exists('TranslationsStreamWrapper')) {
+      registry_rebuild();
+    }
+  }
   return $requirements;
 }
 
@@ -295,6 +302,11 @@ function l10n_update_update_7004() {
  * Migration to 7.x-2.x branch.
  */
 function l10n_update_update_7200() {
+  // Make sure the 'translations' stream wrapper class gets registered.
+  if (!class_exists('TranslationsStreamWrapper')) {
+    registry_rebuild();
+  }
+
   $path = variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
   if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY)) {
     watchdog('l10n_update', 'The directory %directory does not exist or is not writable.', array('%directory' => $path), WATCHDOG_ERROR);
@@ -317,4 +329,13 @@ function l10n_update_update_7200() {
   variable_del('l10n_update_default_server');
   variable_del('l10n_update_default_server_url');
   variable_del('l10n_update_rebuild_projects');
+}
+
+/**
+ * Sets the default translation files directory.
+ */
+function l10n_update_update_7201() {
+  if (!variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH)) {
+   variable_set('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
+  }
 }
