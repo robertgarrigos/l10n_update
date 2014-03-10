@@ -55,10 +55,9 @@ function l10n_update_get_projects($project_names = array()) {
   if (empty($projects)) {
     // Get project data from the database.
     $result = db_query('SELECT name, project_type, core, version, l10n_path as server_pattern, status FROM {l10n_update_project}');
-
     // http://drupal.org/node/1777106 is a follow-up issue to make the check for
     // possible out-of-date project information more robust.
-    if ($result->rowCount() == 0 && module_exists('update')) {
+    if ($result->rowCount() == 0) {
       module_load_include('compare.inc', 'l10n_update');
       // At least the core project should be in the database, so we build the
       // data if none are found.
