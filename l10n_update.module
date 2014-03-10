@@ -175,7 +175,9 @@ function l10n_update_theme() {
  */
 function l10n_update_menu_alter(&$menu) {
   // Redirect l10n_client AJAX callback path for strings.
-  $menu['l10n_client/save']['page callback'] = 'l10n_update_client_save_string';
+  if (module_exists('l10n_client')) {
+    $menu['l10n_client/save']['page callback'] = 'l10n_update_client_save_string';
+  }
 }
 
 /**
