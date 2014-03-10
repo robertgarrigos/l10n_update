@@ -135,6 +135,15 @@ Alternative source of translation
 
     l10n path = sites/all/modules/custom/%project/%project.%language.po
 
+Exclude a project from translation checks and updates
+-----------------------------------------------------
+
+  Individual modules can be excluded from translation checks and updates. For
+  example custom modules or features. Add the following line to the .info file
+  to exclude a module from translation checks and updates:
+
+  interface translation project = FALSE
+
 API
 ---
   Using hook_l10n_update_projects_alter modules can alter or specify the
