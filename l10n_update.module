@@ -266,6 +266,12 @@ function l10n_update_worker($data) {
  * Implements hook_stream_wrappers().
  */
 function l10n_update_stream_wrappers() {
+  // Load the stream wrapper class if not automatically loaded. This happens
+  // before update.php is executed.
+  if (!class_exists('TranslationsStreamWrapper')) {
+    require_once('includes/locale/TranslationsStreamWrapper.php');
+  }
+
   $wrappers['translations'] = array(
     'name' => t('Translation files'),
     'class' => 'TranslationsStreamWrapper',
