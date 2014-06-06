@@ -64,7 +64,7 @@ function l10n_update_status_form() {
             $remote = isset($project_info->files[L10N_UPDATE_REMOTE]) ? $project_info->files[L10N_UPDATE_REMOTE] : NULL;
             $recent = _l10n_update_source_compare($local, $remote) == L10N_UPDATE_SOURCE_COMPARE_LT ? $remote : $local;
             $updates[$langcode]['updates'][] = array(
-              'name' => $project_data[$project_info->name]->info['name'],
+              'name' => $project_info->name == 'drupal' ? t('Drupal core') : $project_data[$project_info->name]->info['name'],
               'version' => $project_info->version,
               'timestamp' => $recent->timestamp,
             );
