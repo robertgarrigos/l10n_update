@@ -460,7 +460,7 @@ function template_preprocess_l10n_update_update_info(&$variables) {
     );
     // Prefix the missing updates list if there is an available updates lists
     // before it.
-    if (!empty($details['available_updates_list']['#items'])) {
+    if (!empty($details['missing_updates_list']['#items'])) {
       $details['missing_updates_list']['#prefix'] = t('Missing translations for:');
     }
   }
