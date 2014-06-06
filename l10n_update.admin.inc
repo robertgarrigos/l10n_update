@@ -266,7 +266,19 @@ function l10n_update_admin_settings_form($form, &$form_state) {
 }
 
 /**
- * Submit handler form Update status form.
+ * Validation handler for translation update settings.
+ */
+function l10n_update_admin_settings_form_validate($form, &$form_state) {
+  // Check for existing translations directory and create one if required.
+  $directory = $form_state['values']['l10n_update_download_store'];
+  if (!file_prepare_directory($directory, FILE_CREATE_DIRECTORY & FILE_MODIFY_PERMISSIONS)) {
+    form_set_error('l10n_update_download_store', t('The directory %directory does not exist or is not writable.', array('%directory' => $directory)));
+    watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $directory), WATCHDOG_ERROR);
+  }
+}
+
+/**
+ * Submit handler for translation update settings.
  */
 function l10n_update_admin_settings_form_submit($form, $form_state) {
   // Invalidate the cached translation status when the configuration setting of
