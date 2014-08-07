@@ -11,7 +11,7 @@
  * Timestamp of source 1 is less than the timestamp of source 2.
  * @see _l10n_update_source_compare()
  */
-const L10N_UPDATE_SOURCE_COMPARE_LT = -1;
+define('L10N_UPDATE_SOURCE_COMPARE_LT', -1);
 
 /**
  * Comparison result of source files timestamps.
@@ -19,7 +19,7 @@ const L10N_UPDATE_SOURCE_COMPARE_LT = -1;
  * Timestamp of source 1 is equal to the timestamp of source 2.
  * @see _l10n_update_source_compare()
  */
-const L10N_UPDATE_SOURCE_COMPARE_EQ = 0;
+define('L10N_UPDATE_SOURCE_COMPARE_EQ', 0);
 
 /**
  * Comparison result of source files timestamps.
@@ -27,7 +27,7 @@ const L10N_UPDATE_SOURCE_COMPARE_EQ = 0;
  * Timestamp of source 1 is greater than the timestamp of source 2.
  * @see _l10n_update_source_compare()
  */
-const L10N_UPDATE_SOURCE_COMPARE_GT = 1;
+define('L10N_UPDATE_SOURCE_COMPARE_GT', 1);
 
 /**
  * Get array of projects which are available for interface translation.
