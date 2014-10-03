@@ -28,12 +28,12 @@ define('L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL', 3);
  *
  * @see l10n_update_default_translation_server().
  */
-define('L10N_UPDATE_DEFAULT_SERVER_PATTERN', 'http://ftp.drupal.org/files/translations/%core/%project/%project-%version.%language.po');
+define('L10N_UPDATE_DEFAULT_SERVER_PATTERN', 'http://ftp.drupal.org/files/translations/%core/%project/%project-%release.%language.po');
 
 /**
  * Default gettext file name on the translation server.
  */
-define('L10N_UPDATE_DEFAULT_FILE_NAME', '%project-%version.%language.po');
+define('L10N_UPDATE_DEFAULT_FILE_NAME', '%project-%release.%language.po');
 
 /**
  * Default gettext file name on the translation server.

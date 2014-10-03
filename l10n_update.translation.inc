@@ -150,7 +150,7 @@ function l10n_update_build_sources($projects = array(), $langcodes = array()) {
  *
  * The "local" files property of the source object contains the definition of a
  * po file we are looking for. The file name defaults to
- * %project-%version.%language.po. Per project this value can be overridden
+ * %project-%release.%language.po. Per project this value can be overridden
  * using the server_pattern directive in the module's .info.yml file or by using
  * hook_l10n_update_projects_alter().
  *
@@ -295,7 +295,7 @@ function l10n_update_source_build($project, $langcode, $filename = NULL) {
  * @param string $template
  *   String containing placeholders. Available placeholders:
  *   - "%project": Project name.
- *   - "%version": Project version.
+ *   - "%release": Project version.
  *   - "%core": Project core version.
  *   - "%language": Language code.
  *
@@ -305,7 +305,7 @@ function l10n_update_source_build($project, $langcode, $filename = NULL) {
 function l10n_update_build_server_pattern($project, $template) {
   $variables = array(
     '%project' => $project->name,
-    '%version' => $project->version,
+    '%release' => $project->version,
     '%core' => $project->core,
     '%language' => isset($project->langcode) ? $project->langcode : '%language',
   );
