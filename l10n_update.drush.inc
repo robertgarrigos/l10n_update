@@ -209,12 +209,14 @@ function _drush_l10n_update_validate_languages() {
     }
     if (drush_get_error() != DRUSH_SUCCESS) {
       drush_print(dt('Available languages: @languages', array('@languages' => implode(', ', array_keys($installed_languages)))));
+      return FALSE;
     }
   }
   else {
     $languages = $installed_languages;
   }
   drush_set_option('languages', $languages);
+  return TRUE;
 }
 
 /**
