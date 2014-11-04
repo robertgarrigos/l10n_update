@@ -78,7 +78,7 @@ function l10n_update_status_form() {
 
     // Build data options for the select table.
     foreach($updates as $langcode => $update) {
-      $title = check_plain($languages[$langcode]->name);
+      $title = check_plain($languages[$langcode]);
       $l10n_update_update_info = array('#theme' => 'l10n_update_update_info');
       foreach (array('updates', 'not_found') as $update_status) {
         if (isset($update[$update_status])) {
