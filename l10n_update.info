@@ -3,6 +3,7 @@ description = Provides automatic downloads and updates for translations.
 dependencies[] = locale
 core = 7.x
 package = Multilingual
+configure = admin/config/regional/language/update
 
 files[] = includes/gettext/PoHeader.php
 files[] = includes/gettext/PoItem.php
