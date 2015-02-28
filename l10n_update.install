@@ -136,9 +136,6 @@ function l10n_update_schema() {
     'primary key' => array('project', 'language'),
   );
 
-  $schema['cache_l10n_update'] = drupal_get_schema_unprocessed('system', 'cache');
-  $schema['cache_l10n_update']['description'] = 'Cache table for the Localization Update module to store information about available releases, fetched from central server.';
-
   return $schema;
 }
 
@@ -301,11 +298,7 @@ function l10n_update_update_7003() {
  * Create {cache_l10n_update} table.
  */
 function l10n_update_update_7004() {
-  if (!db_table_exists('cache_l10n_update')) {
-    $schema = drupal_get_schema_unprocessed('system', 'cache');
-    $schema['description'] = 'Cache table for the Localization Update module to store information about available releases, fetched from central server.';
-    db_create_table('cache_l10n_update', $schema);
-  }
+  // Code removed. Table {cache_l10n_update} is no longer used.
 }
 
 /**
@@ -361,5 +354,14 @@ function l10n_update_update_7200() {
 function l10n_update_update_7201() {
   if (!variable_get('l10n_update_download_store', '')) {
    variable_set('l10n_update_download_store', 'sites/all/translations');
+  }
+}
+
+/**
+ * Removes table {cache_l10n_update}.
+ */
+function l10n_update_update_7202() {
+  if (db_table_exists('cache_l10n_update')) {
+    db_drop_table('cache_l10n_update');
   }
 }
