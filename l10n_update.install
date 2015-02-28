@@ -38,13 +38,6 @@ function l10n_update_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'l10n_server' => array(
-        'description' => 'Localization server for this project.',
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-        'default' => '',
-      ),
       'l10n_path' => array(
         'description' => 'Server path this project updates.',
         'type' => 'varchar',
@@ -363,5 +356,14 @@ function l10n_update_update_7201() {
 function l10n_update_update_7202() {
   if (db_table_exists('cache_l10n_update')) {
     db_drop_table('cache_l10n_update');
+  }
+}
+
+/**
+ * Removes the field 'l10n_server' from table {cache_l10n_update}.
+ */
+function l10n_update_update_7203() {
+  if (db_field_exists('l10n_update_project', 'l10n_server')) {
+    db_drop_field('l10n_update_project', 'l10n_server');
   }
 }
