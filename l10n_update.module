@@ -428,7 +428,7 @@ function l10n_update_client_save_string() {
           $message = theme('l10n_client_message', array('message' => t('Translation saved locally.'), 'level' => WATCHDOG_INFO));
         }
         elseif (!empty($report['deletes'])) {
-          $message = theme('l10n_client_message', array('message' => t('Translation successfuly removed locally.'), 'level' => WATCHDOG_INFO));
+          $message = theme('l10n_client_message', array('message' => t('Translation successfully removed locally.'), 'level' => WATCHDOG_INFO));
         }
         else {
           $message = theme('l10n_client_message', array('message' => t('Unknown error while saving translation locally.')));

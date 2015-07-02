@@ -37,9 +37,9 @@ function hook_l10n_update_projects_alter(&$projects) {
     $projects['custom_module']['info']['l10n path'] = $path . '/translations/%language.po';
   }
 
-  // With this hook it is also possible to add a new project wich does not
+  // With this hook it is also possible to add a new project which does not
   // exist as a real module or theme project but is treated by the localization
-  // update module as one. The below data is the minumum to be specified.
+  // update module as one. The below data is the minimum to be specified.
   // As in the previous example the 'l10n path' element is optional.
   $projects['new_example_project'] = array(
     'project_type'  => 'module',

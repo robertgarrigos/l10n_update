@@ -126,7 +126,7 @@ Alternative source of translation
 
   Modules can force Locale to load the translation of an other project by
   defining 'interface translation project' in their .info file. This can be
-  usefull for custom modules to use for example a common translation file
+  useful for custom modules to use for example a common translation file
 
     interface translation project = my_project
 
