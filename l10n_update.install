@@ -61,7 +61,7 @@ function l10n_update_schema() {
       'project' => array(
         'description' => 'A unique short name to identify the project.',
         'type' => 'varchar',
-        'length' => '50',
+        'length' => '255',
         'not null' => TRUE,
       ),
       'language' => array(
@@ -374,4 +374,12 @@ function l10n_update_update_7203() {
 function l10n_update_update_7204() {
   $schema = l10n_update_schema();
   db_change_field('l10n_update_project', 'name', 'name', $schema['l10n_update_project']['fields']['name']);
+}
+
+/**
+ * Increase the length of the name column.
+ */
+function l10n_update_update_7205() {
+  $schema = l10n_update_schema();
+  db_change_field('l10n_update_file', 'project', 'project', $schema['l10n_update_file']['fields']['project']);
 }
