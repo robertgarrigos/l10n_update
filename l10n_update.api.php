@@ -2,25 +2,26 @@
 
 /**
  * @file
- *   API documentation for Localize updater module.
+ * API documentation for Localize updater module.
  */
 
 /**
  * Alter the list of project to be updated by l10n update.
  *
- * l10n_update uses the same list of projects as update module. Using this hook
+ * L10n_update uses the same list of projects as update module. Using this hook
  * the list can be altered. This hook is typically used to alter the following
  * values from the .info file:
  *  - interface translation project
- *  - l10n path
+ *  - l10n path.
  *
  * @param array $projects
  *   Array of projects.
  */
-function hook_l10n_update_projects_alter(&$projects) {
+function hook_l10n_update_projects_alter(array &$projects) {
 
   foreach (array_keys($projects) as $name) {
-    // Make all custom_* modules use the 'custom_module' module translation file.
+    // Make all custom_* modules use the 'custom_module' module translation
+    // file.
     if (strpos($name, 'custom_') === 0) {
       $projects[$name]['info']['interface translation project'] = 'custom_module';
     }

@@ -78,7 +78,7 @@ class TranslationString extends StringBase {
 
   /**
    * Implements StringInterface::isTranslation().
-  */
+   */
   public function isTranslation() {
     return !empty($this->lid) && !empty($this->language) && isset($this->translation);
   }

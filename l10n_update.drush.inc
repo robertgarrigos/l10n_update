@@ -17,13 +17,13 @@ function l10n_update_drush_command() {
     'description' => 'Show translation status of available projects.',
     'options' => array(
       'languages' => 'Comma separated list of languages. Defaults to all available languages. Example: --languages="nl, fr, de"',
-    )
+    ),
   );
   $commands['l10n-update'] = array(
     'description' => 'Update translations.',
     'options' => array(
       'languages' => 'Comma separated list of languages. Defaults to all available languages. Example: --languages="nl, fr, de"',
-      'mode' => 'Determine if existing translations are overwitten during import. Use "overwrite" to overwrite any existing translation, "replace" to replace previously imported translations but not overwrite edited strings, "keep" to keep any existing translation and only add new translations. Default value: "keep"'
+      'mode' => 'Determine if existing translations are overwitten during import. Use "overwrite" to overwrite any existing translation, "replace" to replace previously imported translations but not overwrite edited strings, "keep" to keep any existing translation and only add new translations. Default value: "keep"',
     ),
   );
   return $commands;
@@ -140,12 +140,14 @@ function drush_l10n_update() {
           'customized' => FALSE,
         );
         break;
+
       case 'replace':
         $options['overwrite_options'] = array(
           'not_customized' => TRUE,
           'customized' => FALSE,
         );
         break;
+
       case 'overwrite':
         $options['overwrite_options'] = array(
           'not_customized' => TRUE,
@@ -155,7 +157,6 @@ function drush_l10n_update() {
 
       default:
         return drush_set_error('L10N_UPDATE_INVALID_MODE', dt('Invalid update mode. Valid options are keep, overwrite.'));
-        break;
     }
 
     $languages = array_keys(drush_get_option('languages'));
@@ -222,14 +223,15 @@ function _drush_l10n_update_validate_languages() {
 /**
  * Helper function to obtain $updates.
  *
- * @return $updates array or NULL.
+ * @return array|NULL
+ *   Array of updates.
  */
 function _drush_l10n_update_get_updates() {
   $updates = array();
   $languages = l10n_update_translatable_language_list();
   $status = l10n_update_get_status();
 
-    drush_log(dt('Fetching update information for all projects / all languages.'), 'status');
+  drush_log(dt('Fetching update information for all projects / all languages.'), 'status');
 
   // Prepare information about projects which have available translation
   // updates.

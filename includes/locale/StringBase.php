@@ -68,7 +68,7 @@ abstract class StringBase implements StringInterface {
    *   Object or array with initial values.
    */
   public function __construct($values = array()) {
-    $this->setValues((array)$values);
+    $this->setValues((array) $values);
   }
 
   /**
@@ -111,7 +111,7 @@ abstract class StringBase implements StringInterface {
   /**
    * Implements StringInterface::setPlurals().
    */
-  public function setPlurals($plurals) {
+  public function setPlurals(array $plurals) {
     $this->setString(implode(L10N_UPDATE_PLURAL_DELIMITER, $plurals));
     return $this;
   }
@@ -126,7 +126,7 @@ abstract class StringBase implements StringInterface {
   /**
    * Implements StringInterface::setStorage().
    */
-  public function setStorage($storage) {
+  public function setStorage(StringStorageInterface $storage) {
     $this->storage = $storage;
     return $this;
   }
@@ -179,7 +179,7 @@ abstract class StringBase implements StringInterface {
     }
     else {
       throw new StringStorageException(format_string('The string cannot be saved because its not bound to a storage: @string', array(
-        '@string' => $this->getString()
+        '@string' => $this->getString(),
       )));
     }
     return $this;
@@ -195,7 +195,7 @@ abstract class StringBase implements StringInterface {
       }
       else {
         throw new StringStorageException(format_string('The string cannot be deleted because its not bound to a storage: @string', array(
-          '@string' => $this->getString()
+          '@string' => $this->getString(),
         )));
       }
     }

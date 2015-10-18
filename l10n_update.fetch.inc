@@ -2,7 +2,7 @@
 
 /**
  * @file
- * The API for download and import of translations from remote and local sources.
+ * The API for download and import of translations.
  */
 
 /**
@@ -92,7 +92,7 @@ function l10n_update_batch_fetch_build($projects = array(), $langcodes = array()
  * @return array
  *   Array of batch operations.
  */
-function _l10n_update_fetch_operations($projects, $langcodes, $options) {
+function _l10n_update_fetch_operations(array $projects, array $langcodes, array $options) {
   $operations = array();
 
   // If the process is going to download files from a remote, make sure the

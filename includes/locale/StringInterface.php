@@ -64,7 +64,7 @@ interface StringInterface {
    *
    * @return LocaleString
    *   The called object.
-  */
+   */
   public function setString($string);
 
   /**
@@ -78,15 +78,16 @@ interface StringInterface {
   /**
    * Sets this string using array of plural values.
    *
-   * Serializes plural variants in one string glued by L10N_UPDATE_PLURAL_DELIMITER.
+   * Serializes plural variants in one string glued by
+   * L10N_UPDATE_PLURAL_DELIMITER.
    *
    * @param array $plurals
    *   Array of strings with plural variants.
    *
    * @return LocaleString
    *   The called object.
-  */
-  public function setPlurals($plurals);
+   */
+  public function setPlurals(array $plurals);
 
   /**
    * Gets the string storage.
@@ -104,8 +105,8 @@ interface StringInterface {
    *
    * @return LocaleString
    *   The called object.
-  */
-  public function setStorage($storage);
+   */
+  public function setStorage(StringStorageInterface $storage);
 
   /**
    * Checks whether the object is not saved to storage yet.
@@ -135,7 +136,7 @@ interface StringInterface {
    * Sets an array of values as object properties.
    *
    * @param array $values
-   *   Array with values indexed by property name,
+   *   Array with values indexed by property name.
    * @param bool $override
    *   (optional) Whether to override already set fields, defaults to TRUE.
    *
@@ -178,7 +179,7 @@ interface StringInterface {
   public function delete();
 
   /**
-   * Get the translation group of this translation
+   * Get the translation group of this translation.
    *
    * @return string
    *   The textgroup set for the current string
@@ -186,10 +187,10 @@ interface StringInterface {
   public function getTextgroup();
 
   /**
-   * Set the translation group of this translation
+   * Set the translation group of this translation.
    *
-   * @param string $group
-   *   The textgroup to set for the given string
+   * @param string $textgroup
+   *   The text group to set for the given string.
    */
   public function setTextgroup($textgroup);
 

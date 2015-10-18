@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   Admin settings and update page.
+ * Admin settings and update page.
  */
 
 /**
@@ -59,7 +59,7 @@ function l10n_update_status_form() {
             $languages_not_found[$langcode] = $langcode;
           }
           // Translation update found for this project-language combination.
-          elseif ($project_info->type == L10N_UPDATE_LOCAL || $project_info->type == L10N_UPDATE_REMOTE ) {
+          elseif ($project_info->type == L10N_UPDATE_LOCAL || $project_info->type == L10N_UPDATE_REMOTE) {
             $local = isset($project_info->files[L10N_UPDATE_LOCAL]) ? $project_info->files[L10N_UPDATE_LOCAL] : NULL;
             $remote = isset($project_info->files[L10N_UPDATE_REMOTE]) ? $project_info->files[L10N_UPDATE_REMOTE] : NULL;
             $recent = _l10n_update_source_compare($local, $remote) == L10N_UPDATE_SOURCE_COMPARE_LT ? $remote : $local;
@@ -78,7 +78,7 @@ function l10n_update_status_form() {
     $languages_not_found = array_diff($languages_not_found, $languages_update);
 
     // Build data options for the select table.
-    foreach($updates as $langcode => $update) {
+    foreach ($updates as $langcode => $update) {
       $title = check_plain($languages[$langcode]);
       $l10n_update_update_info = array('#theme' => 'l10n_update_update_info');
       foreach (array('updates', 'not_found') as $update_status) {
@@ -91,7 +91,7 @@ function l10n_update_status_form() {
           'class' => array('label'),
           'data' => array(
             '#title' => $title,
-            '#markup' => $title
+            '#markup' => $title,
           ),
         ),
         'status' => array('class' => array('description', 'expand', 'priority-low'), 'data' => drupal_render($l10n_update_update_info)),
@@ -126,7 +126,7 @@ function l10n_update_status_form() {
   elseif (empty($options)) {
     $empty = t('All translations up to date.');
   }
-  else  {
+  else {
     $empty = t('No translation status available. <a href="@check">Check manually</a>.', array('@check' => url('admin/config/regional/translate/check')));
   }
 
@@ -303,7 +303,7 @@ function l10n_update_admin_settings_form_submit($form, $form_state) {
  * The import options of the Locale module are used but the UI text is altered
  * to suit the Localization update cases.
  *
- * @return
+ * @return array
  *   Keyed array of import options.
  */
 function _l10n_update_admin_import_options() {
@@ -326,8 +326,8 @@ function _l10n_update_admin_import_options() {
  * Translations for development versions are never fetched, so the debug info
  * for that is a fixed message.
  *
- * @param array $source
- *   An array which is the project information of the source.
+ * @param object $source
+ *   An object which is the project information of the source.
  *
  * @return string
  *   The string which contains debug information.
@@ -375,9 +375,10 @@ function l10n_update_language_table($form_element) {
  *   - form: The form that contains the language information.
  *
  * @see l10n_update_edit_form()
+ *
  * @ingroup themeable
  */
-function theme_l10n_update_edit_form_strings($variables) {
+function theme_l10n_update_edit_form_strings(array $variables) {
   $output = '';
   $form = $variables['form'];
   $header = array(
@@ -426,11 +427,11 @@ function theme_l10n_update_edit_form_strings($variables) {
  *
  * @see l10n_update_status_form()
  */
-function template_preprocess_l10n_update_update_info(&$variables) {
+function template_preprocess_l10n_update_update_info(array &$variables) {
   $details = array();
   $modules = array();
 
-  // Default values
+  // Default values.
   $variables['modules'] = array();
   $variables['module_list'] = '';
   $details['available_updates_list'] = array();
@@ -485,13 +486,13 @@ function template_preprocess_l10n_update_update_info(&$variables) {
  *
  * Default template: l10n_update-translation-last-check.tpl.php.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - last: The timestamp when the site last checked for available updates.
  *
  * @see l10n_update_status_form()
  */
-function template_preprocess_l10n_update_last_check(&$variables) {
+function template_preprocess_l10n_update_last_check(array &$variables) {
   $last = $variables['last'];
   $variables['last_checked'] = $last ? t('Last checked: !time ago', array('!time' => format_interval(REQUEST_TIME - $last))) : t('Last checked: never');
   $variables['link'] = l(t('Check manually'), 'admin/config/regional/translate/check');

@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   Install file for l10n remote updates.
+ * Install file for l10n remote updates.
  */
 
 /**
@@ -183,7 +183,8 @@ function l10n_update_uninstall() {
   variable_del('l10n_update_last_check');
   variable_del('l10n_update_download_store');
   variable_del('l10n_update_translation_status');
-  variable_del('l10n_update_check_mode');}
+  variable_del('l10n_update_check_mode');
+}
 
 /**
  * Implements hook_requirements().
@@ -324,9 +325,11 @@ function l10n_update_update_7200() {
 
   // Translation source 'Remote server only' is no longer supported. Use 'Remote
   // and local' instead.
-  $mode = variable_get('l10n_update_check_mode', 3); // L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL
+  $mode = variable_get('l10n_update_check_mode', 3);
+  // L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL
   if ($mode == 1) {
-    variable_set('l10n_update_check_mode', 3); // L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL
+    variable_set('l10n_update_check_mode', 3);
+    // L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL
   }
 
   // Daily cron updates are no longer supported. Use weekly instead.
@@ -346,7 +349,7 @@ function l10n_update_update_7200() {
  */
 function l10n_update_update_7201() {
   if (!variable_get('l10n_update_download_store', '')) {
-   variable_set('l10n_update_download_store', 'sites/all/translations');
+    variable_set('l10n_update_download_store', 'sites/all/translations');
   }
 }
 

@@ -21,9 +21,9 @@ function l10n_update_flush_projects() {
 }
 
 /**
- * Rebuild project list
+ * Rebuild project list.
  *
- * @param $refresh
+ * @param bool $refresh
  *   TRUE: Refresh project list.
  *
  * @return array
@@ -55,7 +55,7 @@ function l10n_update_build_projects($refresh = FALSE) {
           $data['info']['version'] = $matches[1] . 'x';
         }
         elseif (preg_match("/^(\d+\.).*$/", $data['info']['version'], $matches)) {
-          // Example match: 7.33-dev => 7.x (Drupal core)
+          // Example match: 7.33-dev => 7.x (Drupal core).
           $data['info']['version'] = $matches[1] . 'x';
         }
       }
@@ -90,14 +90,15 @@ function l10n_update_build_projects($refresh = FALSE) {
 }
 
 /**
- * Get update module's project list
+ * Get update module's project list.
  *
  * @return array
+ *   List of projects to be updated.
  */
 function l10n_update_project_list() {
   $projects = array();
   $disabled = variable_get('l10n_update_check_disabled', 0);
-  // Unlike update module, this one has no cache
+  // Unlike update module, this one has no cache.
   _l10n_update_project_info_list($projects, system_rebuild_module_data(), 'module', $disabled);
   _l10n_update_project_info_list($projects, system_rebuild_theme_data(), 'theme', $disabled);
   // Allow other modules to alter projects before fetching and comparing.
@@ -110,13 +111,17 @@ function l10n_update_project_list() {
  *
  * Based on _update_process_info_list()
  *
- * @param $projects
- * @param $list
- * @param $project_type
- * @param $disabled
- *   TRUE to include disabled projects too
+ * @param array $projects
+ *   The list of projects to populate.
+ * @param array $list
+ *   System module list as returned by system_rebuild_module_data() or
+ *   system_rebuild_theme_data().
+ * @param string $project_type
+ *   The project type to process: 'theme' or 'module'.
+ * @param bool $disabled
+ *   TRUE to include disabled projects too.
  */
-function _l10n_update_project_info_list(&$projects, $list, $project_type, $disabled = FALSE) {
+function _l10n_update_project_info_list(array &$projects, array $list, $project_type, $disabled = FALSE) {
   foreach ($list as $file) {
     if (!$disabled && empty($file->status)) {
       // Skip disabled modules or themes.
@@ -176,14 +181,19 @@ function _l10n_update_project_info_list(&$projects, $list, $project_type, $disab
 }
 
 /**
- * Given a $file object (as returned by system_rebuild_module_data()), figure
- * out what project it belongs to.
+ * Given a file object figure out what project it belongs to.
  *
- * Based on update_get_project_name().
+ * Uses a file object as returned by system_rebuild_module_data(). Based on
+ * update_get_project_name().
  *
- * @param $file
+ * @param object $file
+ *   Project info file object.
+ *
  * @return string
+ *   The project's machine name this file belongs to.
+ *
  * @see system_get_files_database()
+ * @see update_get_project_name()
  */
 function l10n_update_get_project_name($file) {
   $project_name = '';
@@ -221,8 +231,9 @@ function l10n_update_default_translation_server() {
  *
  * @return array
  *   Available sources indexed by project and language.
+ *
+ * @todo Return batch array or NULL
  */
-// @todo Return batch or NULL
 function l10n_update_check_projects($projects = array(), $langcodes = array()) {
   if (l10n_update_use_remote_source()) {
     // Retrieve the status of both remote and local translation sources by
@@ -292,8 +303,7 @@ function l10n_update_batch_status_build($projects = array(), $langcodes = array(
 }
 
 /**
- * Helper function to construct batch operations checking remote translation
- * status.
+ * Constructs batch operations checking remote translation status.
  *
  * @param array $projects
  *   Array of project names to be processed.
@@ -305,7 +315,7 @@ function l10n_update_batch_status_build($projects = array(), $langcodes = array(
  * @return array
  *   Array of batch operations.
  */
-function _l10n_update_batch_status_operations($projects, $langcodes, $options = array()) {
+function _l10n_update_batch_status_operations(array $projects, array $langcodes, array $options = array()) {
   $operations = array();
 
   foreach ($projects as $project) {

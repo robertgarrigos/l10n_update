@@ -47,7 +47,7 @@ class PoDatabaseWriter implements PoWriterInterface {
    *  - additions: number of source strings newly added
    *  - updates: number of translations updated
    *  - deletes: number of translations deleted
-   *  - skips: number of strings skipped due to disallowed HTML
+   *  - skips: number of strings skipped due to disallowed HTML.
    *
    * @var array
    */
@@ -63,7 +63,7 @@ class PoDatabaseWriter implements PoWriterInterface {
   /**
    * Constructor, initialize reporting array.
    */
-  function __construct() {
+  public function __construct() {
     $this->setReport();
     $this->storage = new StringDatabaseStorage();
   }
@@ -95,7 +95,7 @@ class PoDatabaseWriter implements PoWriterInterface {
    * @param array $report
    *   Associative array with result information.
    */
-  function setReport($report = array()) {
+  public function setReport($report = array()) {
     $report += array(
       'additions' => 0,
       'updates' => 0,
@@ -109,14 +109,14 @@ class PoDatabaseWriter implements PoWriterInterface {
   /**
    * Get the options used by the writer.
    */
-  function getOptions() {
+  public function getOptions() {
     return $this->_options;
   }
 
   /**
    * Set the options for the current writer.
    */
-  function setOptions(array $options) {
+  public function setOptions(array $options) {
     if (!isset($options['overwrite_options'])) {
       $options['overwrite_options'] = array();
     }
@@ -133,7 +133,7 @@ class PoDatabaseWriter implements PoWriterInterface {
   /**
    * Implements PoMetadataInterface::getHeader().
    */
-  function getHeader() {
+  public function getHeader() {
     return $this->_header;
   }
 
@@ -151,8 +151,9 @@ class PoDatabaseWriter implements PoWriterInterface {
    *   Header metadata.
    *
    * @throws Exception
+   *   Exception is thrown when required properties are not set.
    */
-  function setHeader(PoHeader $header) {
+  public function setHeader(PoHeader $header) {
     $this->_header = $header;
     $languages = language_list();
 
@@ -193,7 +194,7 @@ class PoDatabaseWriter implements PoWriterInterface {
   /**
    * Implements PoWriterInterface::writeItem().
    */
-  function writeItem(PoItem $item) {
+  public function writeItem(PoItem $item) {
     if ($item->isPlural()) {
       $item->setSource(join(L10N_UPDATE_PLURAL_DELIMITER, $item->getSource()));
       $item->setTranslation(join(L10N_UPDATE_PLURAL_DELIMITER, $item->getTranslation()));
@@ -256,7 +257,7 @@ class PoDatabaseWriter implements PoWriterInterface {
           // No translation in this language.
           $string->setValues(array(
             'language' => $this->_langcode,
-            'customized' => $customized
+            'customized' => $customized,
           ));
           $string->save();
           $this->_report['additions']++;
