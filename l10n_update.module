@@ -356,6 +356,15 @@ function l10n_update_themes_enabled($themes) {
 }
 
 /**
+ * Implements hook_flush_caches().
+ *
+ * Clear the translation status to remove old data during update.
+ */
+function l10n_update_flush_caches() {
+  l10n_update_clear_status();
+}
+
+/**
  * Additional submit handler for language forms.
  *
  * We need to refresh status when a new language is enabled / disabled.
@@ -679,9 +688,12 @@ function l10n_update_status_save($project, $langcode, $type, $data) {
         // Check if this translation is the most recent one. Set timestamp and
         // data type of the most recent translation source.
         if (isset($data->timestamp) && $data->timestamp) {
-          if ($data->timestamp > $status[$project][$langcode]->timestamp) {
+          $version_changed = isset($status[$project][$langcode]->files[L10N_UPDATE_CURRENT]->version) &&
+            $status[$project][$langcode]->files[L10N_UPDATE_CURRENT]->version != $data->version;
+          if (($data->timestamp > $status[$project][$langcode]->timestamp) || $version_changed) {
             $status[$project][$langcode]->timestamp = $data->timestamp;
             $status[$project][$langcode]->last_checked = REQUEST_TIME;
+            $status[$project][$langcode]->version = $data->version;
             $status[$project][$langcode]->type = $type;
           }
         }
@@ -691,7 +703,9 @@ function l10n_update_status_save($project, $langcode, $type, $data) {
         $data->last_checked = REQUEST_TIME;
         $status[$project][$langcode]->timestamp = $data->timestamp;
         $status[$project][$langcode]->last_checked = $data->last_checked;
+        $status[$project][$langcode]->version = $data->version;
         $status[$project][$langcode]->type = $type;
+        $status[$project][$langcode]->files[$type] = $data;
         l10n_update_update_file_history($data);
         break;
     }
@@ -754,7 +768,6 @@ function l10n_update_translatable_language_list() {
  */
 function l10n_update_clear_status() {
   variable_del('l10n_update_translation_status');
-  variable_del('l10n_update_last_check');
 }
 
 /**
