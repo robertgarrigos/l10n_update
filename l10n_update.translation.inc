@@ -370,6 +370,9 @@ function l10n_update_cron_fill_queue() {
 function _l10n_update_file_is_remote($uri) {
   $scheme = file_uri_scheme($uri);
   if ($scheme) {
+    if ($scheme == 'http' || $scheme == 'https') {
+      return TRUE;
+    }
     return !drupal_realpath($scheme . '://');
   }
   return FALSE;
