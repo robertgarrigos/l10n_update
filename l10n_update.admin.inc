@@ -374,6 +374,9 @@ function l10n_update_language_table($form_element) {
  *   An associative array containing:
  *   - form: The form that contains the language information.
  *
+ * @return string
+ *   HTML output.
+ *
  * @see l10n_update_edit_form()
  *
  * @ingroup themeable

@@ -38,6 +38,9 @@ class Gettext {
    * @return array
    *   Report array as defined in PoDatabaseWriter.
    *
+   * @throws \Exception
+   *   Throws exception in case of missing header.
+   *
    * @see PoDatabaseWriter
    */
   public static function fileToDatabase($file, array $options) {

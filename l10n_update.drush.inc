@@ -67,13 +67,13 @@ function drush_l10n_update_status() {
     // Build table header.
     $table = array();
     $header = array(dt('Project'));
-    foreach ($languages as $langcode => $language) {
+    foreach ($languages as $language) {
       $header[] = $language->name;
     }
     $table[] = $header;
 
     // Iterate projects to obtain per language status.
-    foreach ($status as $name => $project) {
+    foreach ($status as $project) {
       $row = array();
       // First column: Project name & version number.
       $project_details = reset($project);

@@ -257,7 +257,7 @@ function l10n_update_check_projects($projects = array(), $langcodes = array()) {
  *
  * @param array $projects
  *   Array of project names to check. Defaults to all translatable projects.
- * @param string $langcodes
+ * @param array $langcodes
  *   Array of language codes. Defaults to all translatable languages.
  */
 function l10n_update_check_projects_batch($projects = array(), $langcodes = array()) {

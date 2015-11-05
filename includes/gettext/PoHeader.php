@@ -189,6 +189,9 @@ class PoHeader {
    * @return array
    *   An array containing the number of plural forms and the converted version
    *   of the formula that can be evaluated with PHP later.
+   *
+   * @throws \Exception
+   *   Throws exception in case plural formula could not be parsed.
    */
   public function parsePluralForms($pluralforms) {
     // First, delete all whitespace.

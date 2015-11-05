@@ -44,7 +44,7 @@ define('L10N_UPDATE_SOURCE_COMPARE_GT', 1);
  * disabled this function will return the last known module state. The status
  * will only be updated once Update module is enabled.
  *
- * @params array $project_names
+ * @param array $project_names
  *    Array of names of the projects to get.
  *
  * @return array

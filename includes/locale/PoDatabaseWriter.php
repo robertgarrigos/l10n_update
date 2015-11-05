@@ -275,7 +275,7 @@ class PoDatabaseWriter implements PoWriterInterface {
         // No such source string in the database yet.
         $string = $this->storage->createString(array('source' => $source, 'context' => $context, 'textgroup' => $textgroup))
           ->save();
-        $target = $this->storage->createTranslation(array(
+        $this->storage->createTranslation(array(
           'lid' => $string->getId(),
           'language' => $this->_langcode,
           'translation' => $translation,
