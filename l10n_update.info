@@ -2,6 +2,7 @@ name = Localization update
 description = Provides automatic downloads and updates for translations.
 dependencies[] = locale
 core = 7.x
+php = 5.3
 package = Multilingual
 configure = admin/config/regional/language/update
 
