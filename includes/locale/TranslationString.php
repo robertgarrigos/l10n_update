@@ -14,6 +14,7 @@
  * in the specified language.
  */
 class TranslationString extends StringBase {
+
   /**
    * The language code.
    *
@@ -31,7 +32,7 @@ class TranslationString extends StringBase {
   /**
    * Integer indicating whether this string is customized.
    *
-   * @var int
+   * @var integer
    */
   public $customized;
 

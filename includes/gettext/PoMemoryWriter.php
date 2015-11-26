@@ -28,12 +28,28 @@ class PoMemoryWriter implements PoWriterInterface {
    * Implements PoWriterInterface::writeItem().
    */
   public function writeItem(PoItem $item) {
-    if (is_array($item->getSource())) {
-      $item->setSource(implode(L10N_UPDATE_PLURAL_DELIMITER, $item->getSource()));
-      $item->setTranslation(implode(L10N_UPDATE_PLURAL_DELIMITER, $item->getTranslation()));
-    }
     $context = $item->getContext();
-    $this->_items[$context != NULL ? $context : ''][$item->getSource()] = $item->getTranslation();
+    $context = $context != NULL ? $context : '';
+
+    if ($item->isPlural()) {
+      $sources = $item->getSource();
+      $translations = $item->getTranslation();
+
+      // Build additional source strings for plurals.
+      $entries = array_keys($translations);
+      for ($i = 3; $i <= count($entries); $i++) {
+        $sources[] = $sources[1];
+      }
+      $translations = array_map('_locale_import_append_plural', $translations, $entries);
+      $sources = array_map('_locale_import_append_plural', $sources, $entries);
+
+      foreach ($entries as $index) {
+        $this->_items[][$sources[$index]] = $translations[$index];
+      }
+    }
+    else {
+      $this->_items[$context][$item->getSource()] = $item->getTranslation();
+    }
   }
 
   /**

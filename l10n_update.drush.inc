@@ -26,6 +26,7 @@ function l10n_update_drush_command() {
       'mode' => 'Determine if existing translations are overwitten during import. Use "overwrite" to overwrite any existing translation, "replace" to replace previously imported translations but not overwrite edited strings, "keep" to keep any existing translation and only add new translations. Default value: "keep"',
     ),
   );
+
   return $commands;
 }
 

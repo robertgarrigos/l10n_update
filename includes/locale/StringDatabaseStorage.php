@@ -337,6 +337,8 @@ class StringDatabaseStorage implements StringStorageInterface {
       }
       if (!empty($options['translation'])) {
         // We cannot just add all fields because 'lid' may get null values.
+        $query->addField('t', 'plid');
+        $query->addField('t', 'plural');
         $query->addField('t', 'language');
         $query->addField('t', 'translation');
         $query->addField('t', 'l10n_status', 'customized');
@@ -400,7 +402,7 @@ class StringDatabaseStorage implements StringStorageInterface {
   }
 
   /**
-   * Createds a database record for a string object.
+   * Creates a database record for a string object.
    *
    * @param StringInterface $string
    *   The string object.
@@ -416,10 +418,11 @@ class StringDatabaseStorage implements StringStorageInterface {
     if ($string->isSource()) {
       $string->setValues(array('context' => '', 'version' => 'none'), FALSE);
       $fields = $string->getValues(array('source', 'context', 'version', 'textgroup'));
+      // @todo Add support for D7 fields 'location' and 'textgroup'.
     }
     elseif ($string->isTranslation()) {
       $string->setValues(array('customized' => 0), FALSE);
-      $fields = $string->getValues(array('lid', 'language', 'translation', 'customized'));
+      $fields = $string->getValues(array('lid', 'language', 'translation', 'plid', 'plural', 'customized'));
     }
     if (!empty($fields)) {
       // Change field 'customized' into 'l10n_status'. This enables the Drupal 8

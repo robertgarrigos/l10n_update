@@ -13,7 +13,7 @@ class PoItem {
   /**
    * The language code this translation is in.
    *
-   * @car string
+   * @var string
    */
   private $_langcode;
 
@@ -170,7 +170,7 @@ class PoItem {
   /**
    * Get if the translation has plural values.
    *
-   * @return boolean $plural
+   * @return integer $plural
    *   The translation plural flag.
    */
   public function isPlural() {
@@ -216,10 +216,7 @@ class PoItem {
     if (isset($values['comment'])) {
       $this->setComment($values['comment']);
     }
-    if (isset($this->_source) &&
-        strpos($this->_source, L10N_UPDATE_PLURAL_DELIMITER) !== FALSE) {
-      $this->setSource(explode(L10N_UPDATE_PLURAL_DELIMITER, $this->_source));
-      $this->setTranslation(explode(L10N_UPDATE_PLURAL_DELIMITER, $this->_translation));
+    if (isset($this->_source) && count($this->_source) > 1) {
       $this->setPlural(count($this->_translation) > 1);
     }
   }

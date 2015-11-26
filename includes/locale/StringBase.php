@@ -12,12 +12,27 @@
  * the common properties and methods for source and translation strings.
  */
 abstract class StringBase implements StringInterface {
+
   /**
    * The string identifier.
    *
    * @var integer
    */
   public $lid;
+
+  /**
+   * The parent string identifier for plural translations.
+   *
+   * @var integer
+   */
+  public $plid;
+
+  /**
+   * Plural index in case of plural string.
+   *
+   * @var integer
+   */
+  public $plural;
 
   /**
    * The string locations indexed by type.
@@ -87,6 +102,21 @@ abstract class StringBase implements StringInterface {
   }
 
   /**
+   * Implements StringInterface::getParentId().
+   */
+  public function getParentId() {
+    return isset($this->plid) ? $this->plid : 0;
+  }
+
+  /**
+   * Implements StringInterface::setParentId().
+   */
+  public function setParentId($plid) {
+    $this->plid = $plid;
+    return $this;
+  }
+
+  /**
    * Implements StringInterface::getVersion().
    */
   public function getVersion() {
@@ -98,21 +128,6 @@ abstract class StringBase implements StringInterface {
    */
   public function setVersion($version) {
     $this->version = $version;
-    return $this;
-  }
-
-  /**
-   * Implements StringInterface::getPlurals().
-   */
-  public function getPlurals() {
-    return explode(L10N_UPDATE_PLURAL_DELIMITER, $this->getString());
-  }
-
-  /**
-   * Implements StringInterface::setPlurals().
-   */
-  public function setPlurals(array $plurals) {
-    $this->setString(implode(L10N_UPDATE_PLURAL_DELIMITER, $plurals));
     return $this;
   }
 
