@@ -163,7 +163,7 @@ function drush_l10n_update() {
     $languages = array_keys(drush_get_option('languages'));
 
     // Get translation status of the projects, download and update translations.
-    $batch = l10n_update_batch_update_build(array(), $languages, $options);
+    $batch = l10n_update_batch_update_build(array_keys($updates['projects']), $languages, $options);
     drush_log($batch['title'], 'status');
     drush_log($batch['init_message'], 'status');
     batch_set($batch);
@@ -225,7 +225,11 @@ function _drush_l10n_update_validate_languages() {
  * Helper function to obtain $updates.
  *
  * @return array|NULL
- *   Array of updates.
+ *   Array of projects and languages to be updated. Array keys:
+ *   - projects: Associative array of projects to be updated. Key: Project name.
+ *     Value: Project info array.
+ *   - languages: Associative array of languages to be updated. Key: Language
+ *     code. Value: Project info array.
  */
 function _drush_l10n_update_get_updates() {
   $updates = array();
