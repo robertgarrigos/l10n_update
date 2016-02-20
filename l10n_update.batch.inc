@@ -28,10 +28,10 @@ require_once __DIR__ . '/l10n_update.translation.inc';
  *     batch is finished. Optional, defaults to TRUE.
  *   - 'use_remote': Whether or not to check the remote translation file.
  *     Optional, defaults to TRUE.
- * @param array $context
+ * @param $context
  *   The batch context.
  */
-function l10n_update_batch_status_check($project, $langcode, $options = array(), array &$context) {
+function l10n_update_batch_status_check($project, $langcode, $options = array(), &$context) {
   $failure = $checked = FALSE;
   $options += array(
     'finish_feedback' => TRUE,
@@ -127,12 +127,12 @@ function l10n_update_batch_status_finished($success, array $results) {
  *   Name of the translatable project.
  * @param string $langcode
  *   Language code.
- * @param array $context
+ * @param $context
  *   The batch context.
  *
  * @see l10n_update_batch_fetch_import()
  */
-function l10n_update_batch_fetch_download($project, $langcode, array &$context) {
+function l10n_update_batch_fetch_download($project, $langcode, &$context) {
   $sources = l10n_update_get_status(array($project), array($langcode));
   if (isset($sources[$project][$langcode])) {
     $source = $sources[$project][$langcode];
@@ -160,13 +160,13 @@ function l10n_update_batch_fetch_download($project, $langcode, array &$context) 
  *   Language code.
  * @param array $options
  *   Array of import options.
- * @param array $context
+ * @param $context
  *   The batch context.
  *
  * @see l10n_update_batch_import_files()
  * @see l10n_update_batch_fetch_download()
  */
-function l10n_update_batch_fetch_import($project, $langcode, array $options, array &$context) {
+function l10n_update_batch_fetch_import($project, $langcode, array $options, &$context) {
   $sources = l10n_update_get_status(array($project), array($langcode));
   if (isset($sources[$project][$langcode])) {
     $source = $sources[$project][$langcode];

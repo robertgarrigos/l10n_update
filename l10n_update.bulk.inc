@@ -426,10 +426,10 @@ function l10n_update_batch_build(array $files, array $options) {
  *     to L10N_UPDATE_NOT_CUSTOMIZED.
  *   - 'message': Alternative message to display during import. Note, this must
  *     be sanitized text.
- * @param array $context
+ * @param $context
  *   Contains a list of files imported.
  */
-function l10n_update_batch_import($file, array $options, array &$context) {
+function l10n_update_batch_import($file, array $options, &$context) {
   // Merge the default values in the $options array.
   $options += array(
     'overwrite_options' => array(),
@@ -530,10 +530,10 @@ function l10n_update_batch_import_save(array $context) {
 /**
  * Refreshs translations after importing strings.
  *
- * @param array $context
+ * @param $context
  *   Contains a list of strings updated and information about the progress.
  */
-function l10n_update_batch_refresh(array &$context) {
+function l10n_update_batch_refresh(&$context) {
   if (!isset($context['sandbox']['refresh'])) {
     $strings = $langcodes = array();
     if (isset($context['results']['stats'])) {
