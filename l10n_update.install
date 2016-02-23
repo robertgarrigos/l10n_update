@@ -285,6 +285,7 @@ function l10n_update_requirements($phase) {
  */
 function l10n_update_d8_plural_conversion($start = 0, $length = 0, array &$report) {
   module_load_include('inc', 'l10n_update', 'l10n_update.translation');
+  require_once DRUPAL_ROOT . '/includes/locale.inc';
   $processed = array();
 
   $plurals = l10n_update_get_d8_plural_strings($start, $length);
@@ -369,7 +370,15 @@ function l10n_update_get_d8_plural_strings($start = 0, $length = 0) {
 
   return $translation_strings;
 }
+
+/**
+ * Clean-up after plural string conversion.
+ *
+ * @param $results
+ *   Batch results array.
+ */
 function l10n_update_finish_d8_plural_strings($results) {
+  require_once DRUPAL_ROOT . '/includes/locale.inc';
 
   if ($results) {
     // Delete converted D8 style translations.
