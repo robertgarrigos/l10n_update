@@ -6,7 +6,7 @@
  */
 
 /**
- * Alter the list of project to be updated by l10n update.
+ * Alter the list of project to be updated by Localization Update.
  *
  * L10n_update uses the same list of projects as update module. Using this hook
  * the list can be altered. This hook is typically used to alter the following
@@ -20,6 +20,7 @@
 function hook_l10n_update_projects_alter(array &$projects) {
 
   foreach (array_keys($projects) as $name) {
+    // @todo These 'interface translation project' examples are good for system_projects_alter.
     // Make all custom_* modules use the 'custom_module' module translation
     // file.
     if (strpos($name, 'custom_') === 0) {
@@ -52,4 +53,18 @@ function hook_l10n_update_projects_alter(array &$projects) {
       'l10n path' => 'http://example.com/files/translations/%core/%project/%project-%release.%language.po',
     ),
   );
+}
+
+/**
+ * Alter the list of languages to be updated by Localization Update.
+ *
+ * @param array $langcodes
+ *   Language codes of languages to be updated by Localization Update module.
+ */
+function hook_l10n_update_languages_alter(array &$langcodes) {
+  // Use a different language code for Dutch translations.
+  if (isset($langcodes['nl'])) {
+    $langcodes['nl-NL'] = $langcodes['nl'];
+    unset($langcodes['nl']);
+  }
 }

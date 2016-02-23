@@ -365,6 +365,16 @@ function l10n_update_flush_caches() {
 }
 
 /**
+ * Implements hook_l10n_update_languages_alter().
+ *
+ * Removes disabled languages from the language list.
+ */
+function l10n_update_l10n_update_languages_alter(array &$langcodes) {
+  $disabled = array_filter(variable_get('l10n_update_disabled_languages', array()));
+  $langcodes = array_diff_key($langcodes, $disabled);
+}
+
+/**
  * Additional submit handler for language forms.
  *
  * We need to refresh status when a new language is enabled / disabled.
@@ -405,7 +415,9 @@ function l10n_update_languages_delete_submit($form, $form_state) {
  */
 function l10n_update_locale_translate_edit_form_submit($form, &$form_state) {
   $lid = $form_state['values']['lid'];
-  foreach ($form_state['values']['translations'] as $langcode => $value) {
+  $languages = $form_state['values']['translations'];
+  $languages = array_intersect_key($languages, l10n_update_translatable_language_list());
+  foreach ($languages as $langcode => $value) {
     if (!empty($value) && $value != $form_state['complete form']['translations'][$langcode]['#default_value']) {
       // An update has been made, mark the string as customized.
       db_update('locales_target')
@@ -760,6 +772,8 @@ function l10n_update_status_delete_projects(array $projects) {
 function l10n_update_translatable_language_list() {
   $languages = locale_language_list('name');
   unset($languages['en']);
+
+  drupal_alter('l10n_update_languages', $languages);
   return $languages;
 }
 

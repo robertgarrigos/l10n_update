@@ -262,6 +262,31 @@ function l10n_update_admin_settings_form($form, &$form_state) {
     '#description' => t('How to treat existing translations when automatically updating the interface translations.'),
   );
 
+  $form['disable_update'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Disable update'),
+    '#collapible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['disable_update']['disabled_projects'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Projects'),
+    '#default_value' => implode(PHP_EOL, variable_get('l10n_update_disabled_projects', array())),
+    '#description' => t("These modules, themes or profiles will not receive interface translation updates. Specify them by there machine name, enter one name per line. The '*' character is a wildcard. Use for example feature_* for every feature."),
+  );
+
+  $languages = locale_language_list('name');
+  unset($languages['en']);
+
+  $form['disable_update']['l10n_update_disabled_languages'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Languages'),
+    '#options' => $languages,
+    '#default_value' => variable_get('l10n_update_disabled_languages', array()),
+    '#description' => t('The selected languages will not receive interface translation updates.'),
+  );
+
   $form['#submit'][] = 'l10n_update_admin_settings_form_submit';
   return system_settings_form($form);
 }
@@ -288,13 +313,22 @@ function l10n_update_admin_settings_form_validate($form, &$form_state) {
 /**
  * Submit handler for translation update settings.
  */
-function l10n_update_admin_settings_form_submit($form, $form_state) {
+function l10n_update_admin_settings_form_submit($form, &$form_state) {
   // Invalidate the cached translation status when the configuration setting of
   // 'l10n_update_check_mode' or 'check_disabled' change.
   if ($form['l10n_update_check_mode']['#default_value'] != $form_state['values']['l10n_update_check_mode'] ||
     $form['l10n_update_check_disabled']['#default_value'] != $form_state['values']['l10n_update_check_disabled']) {
     l10n_update_clear_status();
   }
+
+  // Convert the disabled projects input into an array value. The input value is
+  // removed from the form_state values to prevent it being turned into a
+  // variable.
+  $input = $form_state['values']['disabled_projects'];
+  unset($form_state['values']['disabled_projects']);
+  $input = strtr($input, array("\r" => '', ' ' => ''));
+  $values = array_filter(explode("\n", $input));
+  variable_set('l10n_update_disabled_projects', $values);
 }
 
 /**

@@ -103,7 +103,33 @@ function l10n_update_project_list() {
   _l10n_update_project_info_list($projects, system_rebuild_theme_data(), 'theme', $disabled);
   // Allow other modules to alter projects before fetching and comparing.
   drupal_alter('l10n_update_projects', $projects);
+  l10n_update_remove_disabled_projects($projects);
   return $projects;
+}
+
+/**
+ * Removes disabled projects from the project list.
+ *
+ * @param array $projects
+ *   Array of projects keyed by the project machine name.
+ */
+function l10n_update_remove_disabled_projects(&$projects) {
+  $disabled_projects = variable_get('l10n_update_disabled_projects', array());
+
+  foreach ($disabled_projects as $disabled_name) {
+
+    // Remove projects with matching name either by full string of by wild card.
+    if (strpos($disabled_name, '*') !== FALSE) {
+      $pattern = str_replace( '*' , '.*?', $disabled_name);
+      $matches = preg_grep( '/^' . $pattern . '$/i' , array_keys($projects));
+      foreach($matches as $match) {
+        unset($projects[$match]);
+      }
+    }
+    elseif (isset($projects[$disabled_name])) {
+      unset($projects[$disabled_name]);
+    }
+  }
 }
 
 /**
