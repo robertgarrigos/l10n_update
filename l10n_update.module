@@ -356,15 +356,6 @@ function l10n_update_themes_enabled($themes) {
 }
 
 /**
- * Implements hook_flush_caches().
- *
- * Clear the translation status to remove old data during update.
- */
-function l10n_update_flush_caches() {
-  l10n_update_clear_status();
-}
-
-/**
  * Implements hook_l10n_update_languages_alter().
  *
  * Removes disabled languages from the language list.
@@ -640,9 +631,11 @@ function l10n_update_file_history_delete($projects = array(), $langcodes = array
  * @todo What is 'translation status'?
  */
 function l10n_update_get_status($projects = NULL, $langcodes = NULL) {
-  $result = array();
-  $status = variable_get('l10n_update_translation_status', array());
   module_load_include('translation.inc', 'l10n_update');
+  $result = array();
+
+  $cache = cache_get('l10n_update_status');
+  $status = $cache ? $cache->data : array();
   $projects = $projects ? $projects : array_keys(l10n_update_get_projects());
   $langcodes = $langcodes ? $langcodes : array_keys(l10n_update_translatable_language_list());
 
@@ -722,7 +715,7 @@ function l10n_update_status_save($project, $langcode, $type, $data) {
         break;
     }
 
-    variable_set('l10n_update_translation_status', $status);
+    cache_set('l10n_update_status', $status);
     variable_set('l10n_update_last_check', REQUEST_TIME);
   }
 }
@@ -742,7 +735,7 @@ function l10n_update_status_delete_languages(array $langcodes) {
         }
       }
     }
-    variable_set('l10n_update_translation_status', $status);
+    cache_set('l10n_update_status', $status);
   }
 }
 
@@ -760,7 +753,7 @@ function l10n_update_status_delete_projects(array $projects) {
       unset($status[$project]);
     }
   }
-  variable_set('l10n_update_translation_status', $status);
+  cache_set('l10n_update_status', $status);
 }
 
 /**
@@ -781,7 +774,7 @@ function l10n_update_translatable_language_list() {
  * Clear the translation status cache.
  */
 function l10n_update_clear_status() {
-  variable_del('l10n_update_translation_status');
+  cache_clear_all('l10n_update_status', 'cache');
 }
 
 /**

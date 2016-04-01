@@ -182,7 +182,6 @@ function l10n_update_uninstall() {
   variable_del('l10n_update_check_frequency');
   variable_del('l10n_update_last_check');
   variable_del('l10n_update_download_store');
-  variable_del('l10n_update_translation_status');
   variable_del('l10n_update_check_mode');
 }
 
@@ -580,4 +579,13 @@ function l10n_update_update_7207(&$sandbox) {
   }
 
   return $message;
+}
+
+/**
+ * Remove the status variable.
+ */
+function l10n_update_update_7208() {
+  $status = variable_get('l10n_update_translation_status');
+  cache_set('l10n_update_status', $status);
+  variable_del('l10n_update_translation_status');
 }
