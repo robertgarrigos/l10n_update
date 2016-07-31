@@ -131,7 +131,7 @@ Missing translations
   Localization Update module from checking for updates for this feature.
 
   If "missing translations" lists all your enabled modules the webserver has no
-  access to ftp.localize.drupal.org. Contact your hosting to allow access.
+  access to ftp.drupal.org. Contact your hosting to allow access.
 
   If only a few of your contributed modules are in the list, first verify that
   the translation is actually missing by visiting the listed URL of the .po file
