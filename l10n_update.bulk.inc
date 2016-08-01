@@ -373,7 +373,7 @@ function l10n_update_get_interface_translation_files($projects = array(), $langc
  *   - 'finish_feedback': Whether or not to give feedback to the user when the
  *     batch is finished. Optional, defaults to TRUE.
  *
- * @return array
+ * @return array|boolean
  *   A batch structure or FALSE if $files was empty.
  */
 function l10n_update_batch_build(array $files, array $options) {

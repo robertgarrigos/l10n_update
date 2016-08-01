@@ -13,7 +13,7 @@
  * @param array $headers
  *   HTTP request headers.
  *
- * @return object
+ * @return object|boolean
  *   Result object containing the HTTP request headers, response code, headers,
  *   data, redirect status and updated timestamp.
  *
