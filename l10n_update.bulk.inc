@@ -510,7 +510,7 @@ function l10n_update_batch_import($file, array $options, &$context) {
  * @param array $context
  *   Contains a list of imported files.
  */
-function l10n_update_batch_import_save(array $context) {
+function l10n_update_batch_import_save($context) {
   if (isset($context['results']['files'])) {
     foreach ($context['results']['files'] as $file) {
       // Update the file history if both project and version are known. This
