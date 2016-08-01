@@ -175,6 +175,16 @@ API
 
   See l10n_update.api.php for more information.
 
+Using a Proxy
+-------------
+
+  Use the cURL HTTP Request module (https://drupal.org/project/chr) if your
+  website is behind a proxy. If you want to use an alternative http request
+  function, set the 'drupal_http_request_function', the same way as you would
+  set it to override Drupal core's http_request function:
+
+    $conf['drupal_http_request_function'] = 'my_custom_http_request';
+
 Maintainers
 -----------
   Erik Stielstra
