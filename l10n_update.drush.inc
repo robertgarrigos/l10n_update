@@ -224,7 +224,7 @@ function _drush_l10n_update_validate_languages() {
 /**
  * Helper function to obtain $updates.
  *
- * @return array|NULL
+ * @return array|null
  *   Array of projects and languages to be updated. Array keys:
  *   - projects: Associative array of projects to be updated. Key: Project name.
  *     Value: Project info array.

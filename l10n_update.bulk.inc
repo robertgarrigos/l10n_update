@@ -359,7 +359,6 @@ function l10n_update_get_interface_translation_files($projects = array(), $langc
  *
  * @param array $files
  *   Array of file objects to import.
- *
  * @param array $options
  *   An array with options that can have the following elements:
  *   - 'langcode': The language code. Optional, defaults to NULL, which means
@@ -373,7 +372,7 @@ function l10n_update_get_interface_translation_files($projects = array(), $langc
  *   - 'finish_feedback': Whether or not to give feedback to the user when the
  *     batch is finished. Optional, defaults to TRUE.
  *
- * @return array|boolean
+ * @return array|bool
  *   A batch structure or FALSE if $files was empty.
  */
 function l10n_update_batch_build(array $files, array $options) {
@@ -426,7 +425,7 @@ function l10n_update_batch_build(array $files, array $options) {
  *     to L10N_UPDATE_NOT_CUSTOMIZED.
  *   - 'message': Alternative message to display during import. Note, this must
  *     be sanitized text.
- * @param $context
+ * @param array $context
  *   Contains a list of files imported.
  */
 function l10n_update_batch_import($file, array $options, &$context) {
@@ -530,7 +529,7 @@ function l10n_update_batch_import_save($context) {
 /**
  * Refreshs translations after importing strings.
  *
- * @param $context
+ * @param array $context
  *   Contains a list of strings updated and information about the progress.
  */
 function l10n_update_batch_refresh(&$context) {
@@ -606,9 +605,17 @@ function l10n_update_batch_finished($success, $results) {
       drupal_set_message(format_plural(count($results['files']),
         'One translation file imported. %number translations were added, %update translations were updated and %delete translations were removed.',
         '@count translation files imported. %number translations were added, %update translations were updated and %delete translations were removed.',
-        array('%number' => $additions, '%update' => $updates, '%delete' => $deletes)
+        array(
+          '%number' => $additions,
+          '%update' => $updates,
+          '%delete' => $deletes,
+        )
       ));
-      watchdog('l10n_update', 'Translations imported: %number added, %update updated, %delete removed.', array('%number' => $additions, '%update' => $updates, '%delete' => $deletes));
+      watchdog('l10n_update', 'Translations imported: %number added, %update updated, %delete removed.', array(
+        '%number' => $additions,
+        '%update' => $updates,
+        '%delete' => $deletes,
+      ));
 
       if ($skips) {
         if (module_exists('dblog')) {
@@ -618,7 +625,10 @@ function l10n_update_batch_finished($success, $results) {
           $message = format_plural($skips, 'One translation string was skipped because of disallowed or malformed HTML. See the log for details.', '@count translation strings were skipped because of disallowed or malformed HTML. See the log for details.');
         }
         drupal_set_message($message, 'warning');
-        watchdog('l10n_update', '@count disallowed HTML string(s) in files: @files.', array('@count' => $skips, '@files' => implode(',', $skipped_files)), WATCHDOG_WARNING);
+        watchdog('l10n_update', '@count disallowed HTML string(s) in files: @files.', array(
+          '@count' => $skips,
+          '@files' => implode(',', $skipped_files),
+        ), WATCHDOG_WARNING);
       }
     }
   }
@@ -668,7 +678,7 @@ function l10n_update_file_attach_properties($file, $options = array()) {
   }
 
   // Extract project, version and language code from the file name. Supported:
-  // {project}-{version}.{langcode}.po, {prefix}.{langcode}.po or {langcode}.po
+  // {project}-{version}.{langcode}.po, {prefix}.{langcode}.po or {langcode}.po.
   preg_match('!
     (                       # project OR project and version OR emtpy (group 1)
       ([a-z_]+)             # project name (group 2)

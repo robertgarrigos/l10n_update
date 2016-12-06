@@ -14,7 +14,8 @@ Localization Update
 
   The l10n update module is developed for:
    * Distributions which include their own translations in .po files.
-   * Site admins who want to update the translation with each new module revision.
+   * Site admins who want to update the translation with each new module
+     revision.
    * Site builders who want an easy tool to download translations for a site.
    * Multi-sites that share one translation source.
 
@@ -44,9 +45,11 @@ Update interface translations
 -----------------------------
   You want to import translations regularly using cron. You can enable this
   on Administration > Configuration > Regional and language > Languages:
-    Choose the "Translation updates" tab.
-    Change "Check for updates" to "Daily" or "Weekly" instead of the default "Never".
-  From now on cron will check for updated translations, and import them is required.
+   * Choose the "Translation updates" tab.
+   * Change "Check for updates" to "Daily" or "Weekly" instead of the default
+     "Never".
+  From now on cron will check for updated translations, and import them is
+  required.
 
   The status of the translations is reported on the "Status report" page at
   Administration > Reports.
@@ -55,7 +58,8 @@ Update interface translations
     Administration > Configuration > Regional and language > Translate inteface
     Choose the "Update" tab.
   You see a list of all modules and their translation status.
-  On the bottom of the page, you can manually update using "Update translations".
+  On the bottom of the page, you can manually update using "Update
+  translations".
 
 Use Drush
 ---------
@@ -68,10 +72,12 @@ Use Drush
 Summary of administrative pages
 -------------------------------
   Translations status overview can be found at
-    Administration > Configuration > Regional and language > Languages > Translation updates
+    Administration > Configuration > Regional and language > Languages
+    > Translation updates
 
   Update configuration settings can be found at
-    Administration > Configuration > Regional and language > Translate interface > Update
+    Administration > Configuration > Regional and language > Translate interface
+    > Update
 
 Translating Drupal core, modules and themes
 -------------------------------------------
@@ -90,7 +96,8 @@ Translating Drupal core, modules and themes
   strings will not be overwritten by translation updates.
   NOTE: Only manual changes made AFTER installing Localization Update module
   are preserved. To preserve manual changes made prior to installation of
-  Localization Update module, use the option 'All existing translations are kept...'.
+  Localization Update module, use the option 'All existing translations are
+  kept...'.
 
 po files, multi site and distributions
 --------------------------------------
@@ -100,7 +107,8 @@ po files, multi site and distributions
   as their translation source.
 
   All installations that share the same translation files must be configured
-  with the same 'Store downloaded files' file path e.g. 'sites/all/translations'.
+  with the same 'Store downloaded files' file path e.g.
+  'sites/all/translations'.
   Set the 'Update source' of one installation to 'Local files and remote server'
   or 'Remote server only', all other installations are set to
   'Local files only' or 'Local files and remote server'.

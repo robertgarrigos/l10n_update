@@ -13,7 +13,7 @@
  * @param array $headers
  *   HTTP request headers.
  *
- * @return object|boolean
+ * @return object|bool
  *   Result object containing the HTTP request headers, response code, headers,
  *   data, redirect status and updated timestamp.
  *
@@ -215,7 +215,7 @@ function l10n_update_http_request($url, array $options = array()) {
     // server's ability to make outgoing HTTP requests the next time that
     // requirements checking is performed.
     // See system_requirements().
-    // variable_set('drupal_http_request_fails', TRUE);
+    // variable_set('drupal_http_request_fails', TRUE);.
     return $result;
   }
 
