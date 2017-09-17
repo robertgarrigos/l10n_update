@@ -232,7 +232,7 @@ function l10n_update_batch_fetch_finished($success, array $results) {
  */
 function l10n_update_download_source($source_file, $directory = 'temporary://') {
   if ($uri = system_retrieve_file($source_file->uri, $directory, FALSE, FILE_EXISTS_REPLACE)) {
-    $file = clone($source_file);
+    $file = clone $source_file;
     $file->type = L10N_UPDATE_LOCAL;
     $file->uri = $uri;
     $file->directory = $directory;
