@@ -2,11 +2,11 @@
 Localization Update
 -------------------
   Automatically download and update your translations by fetching them from
-  http://localize.drupal.org or any other Localization server.
+  https://localize.drupal.org or any other Localization server.
 
   The l10n update module helps to keep the translation of your drupal core and
   contributed modules up to date with the central Drupal translation repository
-  at http://localize.drupal.org. Alternatively locally stored translation files
+  at https://localize.drupal.org. Alternatively locally stored translation files
   can be used as translation source too.
 
   By choice updates are performed automatically or manually. Locally altered
@@ -19,8 +19,8 @@ Localization Update
    * Site builders who want an easy tool to download translations for a site.
    * Multi-sites that share one translation source.
 
-  Project page:  http://drupal.org/project/l10n_update
-  Support queue: http://drupal.org/project/issues/l10n_update
+  Project page:  https://www.drupal.org/project/l10n_update
+  Support queue: https://www.drupal.org/project/issues/l10n_update
 
 Installation
 ------------
@@ -143,7 +143,7 @@ Missing translations
 
   If only a few of your contributed modules are in the list, first verify that
   the translation is actually missing by visiting the listed URL of the .po file
-  (for example "http://ftp.drupal.org/files/translations/7.x/views/views.hu.po")
+  (for example "https://ftp.drupal.org/files/translations/7.x/views/views.hu.po")
   When the file is not found, you either try again later or contact a
   translation administrator of your language at https://localize.drupal.org/.
 
@@ -186,7 +186,7 @@ API
 Using a Proxy
 -------------
 
-  Use the cURL HTTP Request module (https://drupal.org/project/chr) if your
+  Use the cURL HTTP Request module (https://www.drupal.org/project/chr) if your
   website is behind a proxy. If you want to use an alternative http request
   function, set the 'drupal_http_request_function', the same way as you would
   set it to override Drupal core's http_request function:

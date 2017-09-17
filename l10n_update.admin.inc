@@ -37,7 +37,7 @@ function l10n_update_status_form() {
   $projects_update = array();
 
   // @todo Calling l10n_update_build_projects() is an expensive way to
-  //   get a module name. In follow-up issue http://drupal.org/node/1842362
+  //   get a module name. In follow-up issue https://www.drupal.org/node/1842362
   //   the project name will be stored to display use, like here.
   $project_data = l10n_update_build_projects();
   $languages = l10n_update_translatable_language_list();

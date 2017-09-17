@@ -278,7 +278,7 @@ function l10n_update_export_form_submit($form, &$form_state) {
  * @todo
  *   Integrate with update status to identify projects needed and integrate
  *   l10n_update functionality to feed in translation files alike.
- *   See http://drupal.org/node/1191488.
+ *   See https://www.drupal.org/node/1191488.
  */
 function l10n_update_batch_import_files(array $options, $force = FALSE) {
   $options += array(
@@ -457,7 +457,7 @@ function l10n_update_batch_import($file, array $options, &$context) {
         // Maximize the progress bar at 95% before completion, the batch API
         // could trigger the end of the operation before file reading is done,
         // because of floating point inaccuracies. See
-        // http://drupal.org/node/1089472
+        // https://www.drupal.org/node/1089472
         $context['finished'] = min(0.95, $report['seek'] / filesize($file->uri));
         if (isset($options['message'])) {
           $context['message'] = t('!message (@percent%).', array('!message' => $options['message'], '@percent' => (int) ($context['finished'] * 100)));

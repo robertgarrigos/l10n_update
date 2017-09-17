@@ -560,7 +560,7 @@ function l10n_update_system_remove(array $components) {
       l10n_update_delete_translation_files($list, array());
 
       // Remove translatable projects.
-      // Followup issue http://drupal.org/node/1842362 to replace the
+      // Followup issue https://www.drupal.org/node/1842362 to replace the
       // {l10n_update_project} table. Then change this to a function call.
       db_delete('l10n_update_project')
         ->condition('name', $list)
@@ -686,7 +686,7 @@ function l10n_update_get_status($projects = NULL, $langcodes = NULL) {
  *   File object also containing timestamp when the translation is last updated.
  */
 function l10n_update_status_save($project, $langcode, $type, $data) {
-  // Followup issue: http://drupal.org/node/1842362
+  // Followup issue: https://www.drupal.org/node/1842362
   // Split status storage per module/language and expire individually. This will
   // improve performance for large sites.
   // Load the translation status or build it if not already available.

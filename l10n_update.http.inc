@@ -54,7 +54,7 @@ function l10n_update_http_check($url, array $headers = array()) {
  * Perform an HTTP request.
  *
  * We cannot use drupal_http_request() at install,
- * see http://drupal.org/node/527484
+ * see https://www.drupal.org/node/527484
  *
  * This is a flexible and powerful HTTP client implementation. Correctly
  * handles GET, POST, PUT or any other HTTP requests. Handles redirects.
