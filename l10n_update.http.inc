@@ -95,6 +95,7 @@ function l10n_update_http_check($url, array $headers = array()) {
 function l10n_update_http_request($url, array $options = array()) {
   // Allow an alternate HTTP client library to replace l10n_update's default
   // implementation.
+  /** @var string $override_function */
   $override_function = variable_get('drupal_http_request_function', FALSE);
   if (!empty($override_function) && function_exists($override_function)) {
     return $override_function($url, $options);
