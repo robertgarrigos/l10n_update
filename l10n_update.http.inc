@@ -131,7 +131,7 @@ function l10n_update_http_request($url, array $options = array()) {
 
   // Merge the default headers.
   $options['headers'] += array(
-    'User-Agent' => 'Drupal (+http://drupal.org/)',
+    'User-Agent' => 'Drupal (+https://www.drupal.org/)',
   );
 
   // stream_socket_client() requires timeout to be a float.

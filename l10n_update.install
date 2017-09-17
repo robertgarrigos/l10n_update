@@ -612,3 +612,17 @@ function l10n_update_update_7208() {
   cache_set('l10n_update_status', $status);
   variable_del('l10n_update_translation_status');
 }
+
+/**
+ * Update default variable values to use https.
+ */
+function l10n_update_update_7209() {
+  $server_url = variable_get('l10n_client_server', '');
+  if ($server_url == 'http://localize.drupal.org') {
+    variable_set('l10n_client_server', 'https://localize.drupal.org');
+  }
+  $update_url = variable_get('l10n_update_default_update_url', '');
+  if ($update_url == 'http://ftp.drupal.org/files/translations/%core/%project/%project-%release.%language.po') {
+    variable_set('l10n_update_default_update_url', L10N_UPDATE_DEFAULT_SERVER_PATTERN);
+  }
+}
