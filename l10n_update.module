@@ -187,8 +187,7 @@ function l10n_update_menu_alter(&$menu) {
 /**
  * Implements hook_cron().
  *
- * Check one project/language at a time, download and import if update
- * available.
+ * Checks interface translations. Downloads and imports updates when available.
  */
 function l10n_update_cron() {
   // Update translations only when an update frequency was set by the admin
