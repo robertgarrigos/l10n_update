@@ -148,6 +148,7 @@ function l10n_update_export_form($form, &$form_state) {
     }
   }
   $language_default = language_default();
+  $groups = module_invoke_all('locale', 'groups');
 
   if (empty($language_options)) {
     $form['langcode'] = array(
@@ -168,6 +169,12 @@ function l10n_update_export_form($form, &$form_state) {
       '#default_value' => $language_default->id,
       '#empty_option' => t('Source text only, no translations'),
       '#empty_value' => $language->language,
+    );
+    $form['textgroup'] = array(
+      '#type' => 'select',
+      '#title' => t('Text group'),
+      '#options' => $groups,
+      '#default_value' => 'default',
     );
     $form['content_options'] = array(
       '#type' => 'details',
@@ -222,11 +229,13 @@ function l10n_update_export_form_submit($form, &$form_state) {
     $language = NULL;
   }
   $content_options = isset($form_state['values']['content_options']) ? $form_state['values']['content_options'] : array();
+  $textgroup = isset($form_state['values']['textgroup']) ? $form_state['values']['textgroup'] : NULL;
   $reader = new PoDatabaseReader();
   $languageName = '';
   if ($language != NULL) {
     $reader->setLangcode($language->id);
     $reader->setOptions($content_options);
+    $reader->setTextgroup($textgroup);
     $languages = language_list();
     $languageName = isset($languages[$language->id]) ? $languages[$language->id]->name : '';
     $filename = $language->id . '.po';
