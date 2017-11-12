@@ -260,7 +260,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
     // Initialize common values for error logging.
     $log_vars = array(
       '%uri' => $this->getURI(),
-      '%line' => $this->_line_number,
+      '%line' => &$this->_line_number,
     );
 
     if (!$this->_finished) {
