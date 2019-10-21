@@ -647,5 +647,6 @@ function l10n_update_update_7209() {
  * Add a .htaccess file to the translations directory.
  */
 function l10n_update_update_7210() {
+  module_load_include('module', 'l10n_update');
   l10n_update_ensure_htaccess();
 }
