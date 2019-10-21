@@ -610,9 +610,11 @@ function l10n_update_update_7207(&$sandbox) {
   }
 
   if ($sandbox['#finished'] == 1) {
-    l10n_update_finish_d8_plural_strings($sandbox['report']['results']);
+    if (!empty($sandbox['report']['results'])) {
+      l10n_update_finish_d8_plural_strings($sandbox['report']['results']);
+    }
 
-    if ($sandbox['report']['writer']['skips']) {
+    if (!empty($sandbox['report']['writer']['skips'])) {
       $message = t('Some problems were reported during plural string migration. See <a href="/admin/reports/dblog">Recent log messages</a> for details.');
     }
   }
