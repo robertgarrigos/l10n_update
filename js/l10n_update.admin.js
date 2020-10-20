@@ -9,7 +9,7 @@
   /**
    * Show/hide the description details on Translate interface update page.
    */
-  Drupal.behaviors.hideUpdateInformation = {
+  Backdrop.behaviors.hideUpdateInformation = {
     attach: function (context, settings) {
       var $table = $('#l10n-update-status-form').once('expand-updates');
       if ($table.length) {
@@ -28,10 +28,10 @@
           // Change screen reader text.
           $tr.find('.update-description-prefix').text(function () {
             if ($tr.hasClass('expanded')) {
-              return Drupal.t('Hide description');
+              return Backdrop.t('Hide description');
             }
             else {
-              return Drupal.t('Show description');
+              return Backdrop.t('Show description');
             }
           });
         });

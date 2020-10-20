@@ -6,16 +6,16 @@
  */
 
 /**
- * A Drupal interface translations (translations://) stream wrapper class.
+ * A Backdrop interface translations (translations://) stream wrapper class.
  *
  * Supports storing translation files.
  */
-class TranslationsStreamWrapper extends DrupalLocalStreamWrapper {
+class TranslationsStreamWrapper extends BackdropLocalStreamWrapper {
   /**
    * Implements abstract public function getDirectoryPath().
    */
   public function getDirectoryPath() {
-    return variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
+    return config_get('l10n_update.settings', 'l10n_update_download_store');
   }
 
   /**

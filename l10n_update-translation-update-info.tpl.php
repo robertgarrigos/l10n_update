@@ -27,6 +27,6 @@
   <span class="text"><?php print $missing_updates_status; ?></span>
   <?php endif; ?>
   <?php if($details): ?>
-  <div class="details"><?php print drupal_render($details); ?></div>
+  <div class="details"><?php print backdrop_render($details); ?></div>
   <?php endif; ?>
 </div>

@@ -112,7 +112,7 @@ class StringDatabaseStorage implements StringStorageInterface {
    * @param StringInterface $string
    *   The string object.
    * @param string $version
-   *   Drupal version to check against.
+   *   Backdrop version to check against.
    */
   protected function checkVersion(StringInterface $string, $version) {
     if ($string->getId() && $string->getVersion() != $version) {
@@ -291,7 +291,7 @@ class StringDatabaseStorage implements StringStorageInterface {
    */
   protected function dbStringSelect(array $conditions, array $options = array()) {
     // Change field 'customized' into 'l10n_status'. This enables the Drupal 8
-    // backported code to work with the Drupal 7 style database tables.
+    // backported code to work with the Backdrop 1 style database tables.
     if (isset($conditions['customized'])) {
       $conditions['l10n_status'] = $conditions['customized'];
       unset($conditions['customized']);
@@ -422,7 +422,7 @@ class StringDatabaseStorage implements StringStorageInterface {
     }
     if (!empty($fields)) {
       // Change field 'customized' into 'l10n_status'. This enables the Drupal 8
-      // backported code to work with the Drupal 7 style database tables.
+      // backported code to work with the Backdrop 1 style database tables.
       if (isset($fields['customized'])) {
         $fields['l10n_status'] = $fields['customized'];
         unset($fields['customized']);
@@ -461,7 +461,7 @@ class StringDatabaseStorage implements StringStorageInterface {
     }
     if (!empty($values) && $keys = $this->dbStringKeys($string)) {
       // Change field 'customized' into 'l10n_status'. This enables the Drupal 8
-      // backported code to work with the Drupal 7 style database tables.
+      // backported code to work with the Backdrop 1 style database tables.
       if (isset($keys['customized'])) {
         $keys['l10n_status'] = $keys['customized'];
         unset($keys['customized']);
@@ -497,7 +497,7 @@ class StringDatabaseStorage implements StringStorageInterface {
   protected function dbDelete($table, array $keys) {
     $query = db_delete($table, $this->options);
     // Change field 'customized' into 'l10n_status'. This enables the Drupal 8
-    // backported code to work with the Drupal 7 style database tables.
+    // backported code to work with the Backdrop 1 style database tables.
     if (isset($keys['customized'])) {
       $keys['l10n_status'] = $keys['customized'];
       unset($keys['customized']);

@@ -13,11 +13,11 @@
  * @ingroup forms
  */
 function l10n_update_import_form($form, &$form_state) {
-  drupal_static_reset('language_list');
+  backdrop_static_reset('language_list');
   $languages = language_list();
 
   // Initialize a language list to the ones available, including English if we
-  // are to translate Drupal to English as well.
+  // are to translate Backdrop CMS to English as well.
   $existing_languages = array();
   foreach ($languages as $langcode => $language) {
     if ($langcode != 'en' || l10n_update_english()) {
@@ -54,7 +54,7 @@ function l10n_update_import_form($form, &$form_state) {
     '#attributes' => array('class' => array('file-import-input')),
     '#attached' => array(
       'js' => array(
-        drupal_get_path('module', 'locale') . '/locale.bulk.js' => array(),
+        backdrop_get_path('module', 'locale') . '/locale.bulk.js' => array(),
       ),
     ),
   );
@@ -112,7 +112,7 @@ function l10n_update_import_form_submit($form, &$form_state) {
         'id' => $form_state['values']['langcode'],
       ));
       $language = language_save($language);
-      drupal_set_message(t('The language %language has been created.', array('%language' => t($language->name))));
+      backdrop_set_message(t('The language %language has been created.', array('%language' => t($language->name))));
     }
     $options = array(
       'langcode' => $form_state['values']['langcode'],
@@ -153,7 +153,7 @@ function l10n_update_export_form($form, &$form_state) {
   if (empty($language_options)) {
     $form['langcode'] = array(
       '#type' => 'value',
-      '#value' => $language->language,
+      '#value' => $language->langcode,
     );
     $form['langcode_text'] = array(
       '#type' => 'item',
@@ -168,7 +168,7 @@ function l10n_update_export_form($form, &$form_state) {
       '#options' => $language_options,
       '#default_value' => $language_default->id,
       '#empty_option' => t('Source text only, no translations'),
-      '#empty_value' => $language->language,
+      '#empty_value' => $language->langcode,
     );
     $form['textgroup'] = array(
       '#type' => 'select',
@@ -183,7 +183,7 @@ function l10n_update_export_form($form, &$form_state) {
       '#tree' => TRUE,
       '#states' => array(
         'invisible' => array(
-          ':input[name="langcode"]' => array('value' => $language->language),
+          ':input[name="langcode"]' => array('value' => $language->langcode),
         ),
       ),
     );
@@ -221,7 +221,7 @@ function l10n_update_export_form_submit($form, &$form_state) {
   global $language;
 
   // If template is required, language code is not given.
-  if ($form_state['values']['langcode'] != $language->language) {
+  if ($form_state['values']['langcode'] != $language->langcode) {
     $languages = language_list();
     $language = isset($languages[$form_state['values']['langcode']]) ? $languages[$form_state['values']['langcode']] : NULL;
   }
@@ -242,14 +242,14 @@ function l10n_update_export_form_submit($form, &$form_state) {
   }
   else {
     // Template required.
-    $filename = 'drupal.pot';
+    $filename = 'backdrop.pot';
   }
 
   $item = $reader->readItem();
   if (!empty($item)) {
     $uri = tempnam('temporary://', 'po_');
     $header = $reader->getHeader();
-    $header->setProjectName(variable_get('site_name'));
+    $header->setProjectName(config_get('system.core', 'site_name'));
     $header->setLanguageName($languageName);
 
     $writer = new PoStreamWriter();
@@ -262,7 +262,7 @@ function l10n_update_export_form_submit($form, &$form_state) {
     $writer->close();
   }
   else {
-    drupal_set_message('Nothing to export.');
+    backdrop_set_message('Nothing to export.');
   }
 }
 
@@ -347,7 +347,7 @@ function l10n_update_get_interface_translation_files($projects = array(), $langc
   // containing a project name and language code: {project}.{langcode}.po or
   // {project}-{version}.{langcode}.po.
   // Only files of known projects and languages will be returned.
-  $directory = variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
+  $directory = config_get('l10n_update.settings', 'l10n_update_download_store');
   $result = file_scan_directory($directory, '![a-z_]+(\-[0-9a-z\.\-\+]+|)\.[^\./]+\.po$!', array('recurse' => FALSE));
 
   foreach ($result as $file) {
@@ -407,7 +407,7 @@ function l10n_update_batch_build(array $files, array $options) {
       'title'         => t('Importing interface translations'),
       'progress_message' => '',
       'error_message' => t('Error importing interface translations'),
-      'file'          => drupal_get_path('module', 'locale') . '/locale.bulk.inc',
+      'file'          => backdrop_get_path('module', 'locale') . '/locale.bulk.inc',
     );
     if ($options['finish_feedback']) {
       $batch['finished'] = 'l10n_update_batch_finished';
@@ -449,7 +449,7 @@ function l10n_update_batch_import($file, array $options, &$context) {
     try {
       if (empty($context['sandbox'])) {
         $context['sandbox']['parse_state'] = array(
-          'filesize' => filesize(drupal_realpath($file->uri)),
+          'filesize' => filesize(backdrop_realpath($file->uri)),
           'chunk_size' => 200,
           'seek' => 0,
         );
@@ -594,7 +594,7 @@ function l10n_update_batch_finished($success, $results) {
       else {
         $message = format_plural(count($results['failed_files']), 'One translation files could not be imported. See the log for details.', '@count translation files could not be imported. See the log for details.');
       }
-      drupal_set_message($message, 'error');
+      backdrop_set_message($message, 'error');
     }
     if (isset($results['files'])) {
       $skipped_files = array();
@@ -611,7 +611,7 @@ function l10n_update_batch_finished($success, $results) {
           }
         }
       }
-      drupal_set_message(format_plural(count($results['files']),
+      backdrop_set_message(format_plural(count($results['files']),
         'One translation file imported. %number translations were added, %update translations were updated and %delete translations were removed.',
         '@count translation files imported. %number translations were added, %update translations were updated and %delete translations were removed.',
         array(
@@ -633,7 +633,7 @@ function l10n_update_batch_finished($success, $results) {
         else {
           $message = format_plural($skips, 'One translation string was skipped because of disallowed or malformed HTML. See the log for details.', '@count translation strings were skipped because of disallowed or malformed HTML. See the log for details.');
         }
-        drupal_set_message($message, 'warning');
+        backdrop_set_message($message, 'warning');
         watchdog('l10n_update', '@count disallowed HTML string(s) in files: @files.', array(
           '@count' => $skips,
           '@files' => implode(',', $skipped_files),
@@ -654,7 +654,7 @@ function l10n_update_batch_finished($success, $results) {
  */
 function l10n_update_file_create($filepath) {
   $file = new stdClass();
-  $file->filename = drupal_basename($filepath);
+  $file->filename = backdrop_basename($filepath);
   $file->uri = $filepath;
   $file->timestamp = filemtime($file->uri);
   return $file;

@@ -6,7 +6,7 @@
  */
 
 /**
- * Static class providing Drupal specific Gettext functionality.
+ * Static class providing Backdrop specific Gettext functionality.
  *
  * The operations are related to pumping data from a source to a destination,
  * for example:

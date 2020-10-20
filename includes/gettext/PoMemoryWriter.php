@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoMemoryWriter.
+ * Definition of Backdrop\Component\Gettext\PoMemoryWriter.
  */
 
 /**
@@ -73,7 +73,7 @@ class PoMemoryWriter implements PoWriterInterface {
   }
 
   /**
-   * Implements Drupal\Component\Gettext\PoMetadataInterface:setLangcode().
+   * Implements Backdrop\Component\Gettext\PoMetadataInterface:setLangcode().
    *
    * Not implemented. Not relevant for the MemoryWriter.
    */
@@ -81,7 +81,7 @@ class PoMemoryWriter implements PoWriterInterface {
   }
 
   /**
-   * Implements Drupal\Component\Gettext\PoMetadataInterface:getLangcode().
+   * Implements Backdrop\Component\Gettext\PoMetadataInterface:getLangcode().
    *
    * Not implemented. Not relevant for the MemoryWriter.
    */
@@ -89,7 +89,7 @@ class PoMemoryWriter implements PoWriterInterface {
   }
 
   /**
-   * Implements Drupal\Component\Gettext\PoMetadataInterface:getHeader().
+   * Implements Backdrop\Component\Gettext\PoMetadataInterface:getHeader().
    *
    * Not implemented. Not relevant for the MemoryWriter.
    */
@@ -97,7 +97,7 @@ class PoMemoryWriter implements PoWriterInterface {
   }
 
   /**
-   * Implements Drupal\Component\Gettext\PoMetadataInterface:setHeader().
+   * Implements Backdrop\Component\Gettext\PoMetadataInterface:setHeader().
    *
    * Not implemented. Not relevant for the MemoryWriter.
    */

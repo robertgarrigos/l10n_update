@@ -53,7 +53,7 @@ function l10n_update_http_check($url, array $headers = array()) {
 /**
  * Perform an HTTP request.
  *
- * We cannot use drupal_http_request() at install,
+ * We cannot use backdrop_http_request() at install,
  * see https://www.drupal.org/node/527484
  *
  * This is a flexible and powerful HTTP client implementation. Correctly
@@ -93,12 +93,16 @@ function l10n_update_http_check($url, array $headers = array()) {
  *   - data: A string containing the response body that was received.
  */
 function l10n_update_http_request($url, array $options = array()) {
-  // Allow an alternate HTTP client library to replace l10n_update's default
+  // Allow an alternate HTTP client library to replace Backdrop's default
   // implementation.
-  /** @var string $override_function */
-  $override_function = variable_get('drupal_http_request_function', FALSE);
-  if (!empty($override_function) && function_exists($override_function)) {
-    return $override_function($url, $options);
+  $alternate_http_system = &backdrop_static('__FUNCTION__');
+  if (!isset($alternate_http_system)) {
+    $class = settings_get('http_system');
+    /* @var BackdropHTTPSystemInterface $alternate_http_system */
+    $alternate_http_system = $class ? new $class() : FALSE;
+  }
+  if ($alternate_http_system) {
+    return $alternate_http_system->request($url, $options);
   }
 
   $result = new stdClass();
@@ -132,15 +136,15 @@ function l10n_update_http_request($url, array $options = array()) {
 
   // Merge the default headers.
   $options['headers'] += array(
-    'User-Agent' => 'Drupal (+https://www.drupal.org/)',
+    'User-Agent' => 'Backdrop (+https://backdropcms.org/)',
   );
 
   // stream_socket_client() requires timeout to be a float.
   $options['timeout'] = (float) $options['timeout'];
 
   // Use a proxy if one is defined and the host is not on the excluded list.
-  $proxy_server = variable_get('proxy_server', '');
-  if ($proxy_server && _drupal_http_use_proxy($uri['host'])) {
+  $proxy_server = settings_get('proxy_server', '');
+  if ($proxy_server && _backdrop_http_use_proxy($uri['host'])) {
     // Set the scheme so we open a socket to the proxy server.
     $uri['scheme'] = 'proxy';
     // Set the path to be the full URL.
@@ -149,13 +153,13 @@ function l10n_update_http_request($url, array $options = array()) {
     unset($uri['query']);
 
     // Add in username and password to Proxy-Authorization header if needed.
-    if ($proxy_username = variable_get('proxy_username', '')) {
-      $proxy_password = variable_get('proxy_password', '');
+    if ($proxy_username = settings_get('proxy_username', '')) {
+      $proxy_password = settings_get('proxy_password', '');
       $options['headers']['Proxy-Authorization'] = 'Basic ' . base64_encode($proxy_username . (!empty($proxy_password) ? ":" . $proxy_password : ''));
     }
     // Some proxies reject requests with any User-Agent headers, while others
     // require a specific one.
-    $proxy_user_agent = variable_get('proxy_user_agent', '');
+    $proxy_user_agent = settings_get('proxy_user_agent', '');
     // The default value matches neither condition.
     if ($proxy_user_agent === NULL) {
       unset($options['headers']['User-Agent']);
@@ -168,7 +172,7 @@ function l10n_update_http_request($url, array $options = array()) {
   switch ($uri['scheme']) {
     case 'proxy':
       // Make the socket connection to a proxy server.
-      $socket = 'tcp://' . $proxy_server . ':' . variable_get('proxy_port', 8080);
+      $socket = 'tcp://' . $proxy_server . ':' . settings_get('proxy_port', 8080);
       // The Host header still needs to match the real request.
       $options['headers']['Host'] = $uri['host'];
       $options['headers']['Host'] .= isset($uri['port']) && $uri['port'] != 80 ? ':' . $uri['port'] : '';
@@ -216,7 +220,7 @@ function l10n_update_http_request($url, array $options = array()) {
     // server's ability to make outgoing HTTP requests the next time that
     // requirements checking is performed.
     // See system_requirements().
-    // variable_set('drupal_http_request_fails', TRUE);.
+    // settings_set('backdrop_http_request_fails', TRUE);.
     return $result;
   }
 
@@ -242,13 +246,13 @@ function l10n_update_http_request($url, array $options = array()) {
 
   // If the database prefix is being used by SimpleTest to run the tests in a
   // copied database then set the user-agent header to the database prefix so
-  // that any calls to other Drupal pages will run the SimpleTest prefixed
+  // that any calls to other Backdrop pages will run the SimpleTest prefixed
   // database. The user-agent is used to ensure that multiple testing sessions
   // running at the same time won't interfere with each other as they would if
   // the database prefix were stored statically in a file or database variable.
-  $test_info = &$GLOBALS['drupal_test_info'];
+  $test_info = &$GLOBALS['backdrop_test_info'];
   if (!empty($test_info['test_run_id'])) {
-    $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
+    $options['headers']['User-Agent'] = backdrop_generate_test_ua($test_info['test_run_id']);
   }
 
   $request = $options['method'] . ' ' . $path . " HTTP/1.0\r\n";

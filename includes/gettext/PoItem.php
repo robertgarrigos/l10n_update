@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoItem.
+ * Definition of Backdrop\Component\Gettext\PoItem.
  */
 
 /**

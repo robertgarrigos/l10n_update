@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoWriterInterface.
+ * Definition of Backdrop\Component\Gettext\PoWriterInterface.
  */
 
 /**

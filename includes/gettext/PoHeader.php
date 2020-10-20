@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoHeader.
+ * Definition of Backdrop\Component\Gettext\PoHeader.
  */
 
 /**
@@ -14,7 +14,7 @@
  *
  * Example header:
  *
- * "Project-Id-Version: Drupal core (7.11)\n"
+ * "Project-Id-Version: Backdrop core (7.11)\n"
  * "POT-Creation-Date: 2012-02-12 22:59+0000\n"
  * "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
  * "Language-Team: Catalan\n"

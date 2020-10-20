@@ -44,7 +44,7 @@ function l10n_update_batch_update_build($projects = array(), $langcodes = array(
     'progress_message' => '',
     'error_message' => t('Error importing translation files'),
     'finished' => 'l10n_update_batch_fetch_finished',
-    'file' => drupal_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
+    'file' => backdrop_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
   );
   return $batch;
 }
@@ -73,7 +73,7 @@ function l10n_update_batch_fetch_build($projects = array(), $langcodes = array()
     'progress_message' => '',
     'error_message' => t('Error importing translation files'),
     'finished' => 'l10n_update_batch_fetch_finished',
-    'file' => drupal_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
+    'file' => backdrop_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
   );
   return $batch;
 }
@@ -98,11 +98,11 @@ function _l10n_update_fetch_operations(array $projects, array $langcodes, array 
   // If the process is going to download files from a remote, make sure the
   // files can be saved in the download directory.
   if (!empty($projects) && l10n_update_use_remote_source()) {
-    $directory = variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH);
+    $directory = config_get('l10n_update.settings', 'l10n_update_download_store');
 
     // Do not download files if the directory is missing or can not be created.
     if (!file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      drupal_set_message(t('The directory %directory does not exist or is not writable.', array('%directory' => $directory)), 'error');
+      backdrop_set_message(t('The directory %directory does not exist or is not writable.', array('%directory' => $directory)), 'error');
       watchdog('file system', 'The directory %directory does not exist or is not writable.', array('%directory' => $directory), WATCHDOG_ERROR);
       return $operations;
     }

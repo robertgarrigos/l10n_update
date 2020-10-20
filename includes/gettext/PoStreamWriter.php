@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoStreamWriter.
+ * Definition of Backdrop\Component\Gettext\PoStreamWriter.
  */
 
 /**

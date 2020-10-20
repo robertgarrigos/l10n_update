@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoMetadataInterface.
+ * Definition of Backdrop\Component\Gettext\PoMetadataInterface.
  */
 
 /**
  * Methods required for both reader and writer implementations.
  *
- * @see Drupal\Component\Gettext\PoReaderInterface
- * @see Drupal\Component\Gettext\PoWriterInterface
+ * @see Backdrop\Component\Gettext\PoReaderInterface
+ * @see Backdrop\Component\Gettext\PoWriterInterface
  */
 interface PoMetadataInterface {
 

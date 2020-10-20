@@ -1,0 +1,12 @@
+{
+    "_config_name": "l10n_update.settings",
+    "l10n_update_check_disabled": 0,
+    "l10n_update_check_frequency": 0,
+    "l10n_update_check_mode": 3,
+    "l10n_update_default_update_url": "https://localize.backdropcms.org/files/l10n_packager/%core/%project/%project-%release.%language.po",
+    "l10n_update_disabled_projects": [],
+    "l10n_update_disabled_languages": [],
+    "l10n_update_download_store": "translations",
+    "l10n_update_import_enabled": true,
+    "l10n_update_import_mode": 1
+}

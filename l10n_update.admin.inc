@@ -24,7 +24,7 @@ function l10n_update_manual_status() {
   if (batch_get()) {
     batch_process('admin/config/regional/translate/update');
   }
-  drupal_goto('admin/config/regional/translate/update');
+  backdrop_goto('admin/config/regional/translate/update');
 }
 
 /**
@@ -52,7 +52,7 @@ function l10n_update_status_form() {
           // No translation file found for this project-language combination.
           if (empty($project_info->type)) {
             $updates[$langcode]['not_found'][] = array(
-              'name' => $project_info->name == 'drupal' ? t('Drupal core') : $project_data[$project_info->name]->info['name'],
+              'name' => $project_info->name == 'backdrop' ? t('Backdrop CMS core') : $project_data[$project_info->name]->info['name'],
               'version' => $project_info->version,
               'info' => _l10n_update_status_debug_info($project_info),
             );
@@ -65,7 +65,7 @@ function l10n_update_status_form() {
             $recent = _l10n_update_source_compare($local, $remote) == L10N_UPDATE_SOURCE_COMPARE_LT ? $remote : $local;
             $name = isset($project_data[$project_info->name]->info['name']) ? $project_data[$project_info->name]->info['name'] : '';
             $updates[$langcode]['updates'][] = array(
-              'name' => $project_info->name == 'drupal' ? t('Drupal core') : $name,
+              'name' => $project_info->name == 'backdrop' ? t('Backdrop CMS core') : $name,
               'version' => $project_info->version,
               'timestamp' => $recent->timestamp,
             );
@@ -100,7 +100,7 @@ function l10n_update_status_form() {
             'expand',
             'priority-low',
           ),
-          'data' => drupal_render($l10n_update_update_info),
+          'data' => backdrop_render($l10n_update_update_info),
         ),
       );
     }
@@ -110,7 +110,7 @@ function l10n_update_status_form() {
     });
   }
 
-  $last_checked = variable_get('l10n_update_last_check');
+  $last_checked = state_get('l10n_update_last_check');
   $form['last_checked'] = array(
     '#theme' => 'l10n_update_last_check',
     '#last' => $last_checked,
@@ -158,10 +158,10 @@ function l10n_update_status_form() {
 
   $form['#attached'] = array(
     'js' => array(
-      drupal_get_path('module', 'l10n_update') . '/js/l10n_update.admin.js',
+      backdrop_get_path('module', 'l10n_update') . '/js/l10n_update.admin.js',
     ),
     'css' => array(
-      drupal_get_path('module', 'l10n_update') . '/css/l10n_update.admin.css',
+      backdrop_get_path('module', 'l10n_update') . '/css/l10n_update.admin.css',
     ),
   );
 
@@ -204,7 +204,7 @@ function l10n_update_status_form_submit($form, $form_state) {
   // If the status was updated recently we can immediately start fetching the
   // translation updates. If the status is expired we clear it an run a batch to
   // update the status and then fetch the translation updates.
-  $last_checked = variable_get('l10n_update_last_check');
+  $last_checked = state_get('l10n_update_last_check');
   if ($last_checked < REQUEST_TIME - L10N_UPDATE_STATUS_TTL) {
     l10n_update_clear_status();
     $batch = l10n_update_batch_update_build(array(), $langcodes, $options);
@@ -220,10 +220,12 @@ function l10n_update_status_form_submit($form, $form_state) {
  * Page callback: Settings form.
  */
 function l10n_update_admin_settings_form($form, &$form_state) {
+  $config = config('l10n_update.settings');
+  $form['#config'] = 'l10n_update.settings';
   $form['l10n_update_check_frequency'] = array(
     '#type' => 'radios',
     '#title' => t('Check for updates'),
-    '#default_value' => variable_get('l10n_update_check_frequency', '0'),
+    '#default_value' => $config->get('l10n_update_check_frequency'),
     '#options' => array(
       '0' => t('Never (manually)'),
       '7' => t('Weekly'),
@@ -235,15 +237,15 @@ function l10n_update_admin_settings_form($form, &$form_state) {
   $form['l10n_update_check_disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Check for updates of disabled modules and themes'),
-    '#default_value' => variable_get('l10n_update_check_disabled', FALSE),
+    '#default_value' => $config->get('l10n_update_check_disabled'),
   );
 
   $form['l10n_update_check_mode'] = array(
     '#type' => 'radios',
     '#title' => t('Translation source'),
-    '#default_value' => variable_get('l10n_update_check_mode', L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL),
+    '#default_value' => $config->get('l10n_update_check_mode'),
     '#options' => array(
-      L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL => t('Drupal translation server and local files'),
+      L10N_UPDATE_USE_SOURCE_REMOTE_AND_LOCAL => t('Backdrop CMS translation server and local files'),
       L10N_UPDATE_USE_SOURCE_LOCAL => t('Local files only'),
     ),
     '#description' => t('The source of translation files for automatic interface translation.'),
@@ -252,15 +254,15 @@ function l10n_update_admin_settings_form($form, &$form_state) {
   $form['l10n_update_download_store'] = array(
     '#title' => t('Translations directory'),
     '#type' => 'textfield',
-    '#default_value' => variable_get('l10n_update_download_store', L10N_UPDATE_DEFAULT_TRANSLATION_PATH),
+    '#default_value' => $config->get('l10n_update_download_store'),
     '#required' => TRUE,
-    '#description' => t('A path relative to the Drupal installation directory where translation files will be stored, e.g. sites/all/translations. Saved translation files can be reused by other installations.'),
+    '#description' => t('A path relative to the Backdrop CMS installation directory where translation files will be stored, e.g. translations. Saved translation files can be reused by other installations.'),
   );
 
   $form['l10n_update_import_mode'] = array(
     '#type' => 'radios',
     '#title' => t('Import behaviour'),
-    '#default_value' => variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP),
+    '#default_value' => $config->get('l10n_update_import_mode'),
     '#options' => array(
       LOCALE_IMPORT_KEEP => t("Don't overwrite existing translations."),
       L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED => t('Only overwrite imported translations, customized translations are kept.'),
@@ -279,18 +281,18 @@ function l10n_update_admin_settings_form($form, &$form_state) {
   $form['disable_update']['disabled_projects'] = array(
     '#type' => 'textarea',
     '#title' => t('Projects'),
-    '#default_value' => implode(PHP_EOL, variable_get('l10n_update_disabled_projects', array())),
+    '#default_value' => implode(PHP_EOL, $config->get('l10n_update_disabled_projects')),
     '#description' => t("These modules, themes or profiles will not receive interface translation updates. Specify them by there machine name, enter one name per line. The '*' character is a wildcard. Use for example feature_* for every feature."),
   );
 
-  $languages = locale_language_list('name');
+  $languages = language_list(TRUE, TRUE);
   unset($languages['en']);
 
   $form['disable_update']['l10n_update_disabled_languages'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Languages'),
     '#options' => $languages,
-    '#default_value' => variable_get('l10n_update_disabled_languages', array()),
+    '#default_value' => $config->get('l10n_update_disabled_languages'),
     '#description' => t('The selected languages will not receive interface translation updates.'),
   );
 
@@ -337,7 +339,7 @@ function l10n_update_admin_settings_form_submit($form, &$form_state) {
   unset($form_state['values']['disabled_projects']);
   $input = strtr($input, array("\r" => '', ' ' => ''));
   $values = array_filter(explode("\n", $input));
-  variable_set('l10n_update_disabled_projects', $values);
+  config_set('l10n_update.settings', 'l10n_update_disabled_projects', $values);
 
   // Add .htaccess file to the translations directory.
   l10n_update_ensure_htaccess();
@@ -363,7 +365,7 @@ function _l10n_update_admin_import_options() {
 /**
  * Provides debug info for projects in case translation files are not found.
  *
- * Translations files are being fetched either from Drupal translation server
+ * Translations files are being fetched either from Backdrop CMS translation server
  * and local files or only from the local filesystem depending on the
  * "Translation source" setting at admin/config/regional/language/update.
  * This method will produce debug information including the respective path(s)
@@ -438,10 +440,10 @@ function theme_l10n_update_edit_form_strings(array $variables) {
   foreach (element_children($form) as $lid) {
     $string = $form[$lid];
     if ($string['plural']['#value']) {
-      $source = drupal_render($string['original_singular']) . '<br />' . drupal_render($string['original_plural']);
+      $source = backdrop_render($string['original_singular']) . '<br />' . backdrop_render($string['original_plural']);
     }
     else {
-      $source = drupal_render($string['original']);
+      $source = backdrop_render($string['original']);
     }
     $source .= empty($string['context']) ? '' : '<br /><small>' . t('In Context') . ':&nbsp;' . $string['context']['#value'] . '</small>';
     $rows[] = array(
@@ -456,9 +458,9 @@ function theme_l10n_update_edit_form_strings(array $variables) {
     '#empty' => t('No strings available.'),
     '#attributes' => array('class' => array('locale-translate-edit-table')),
   );
-  $output .= drupal_render($table);
+  $output .= backdrop_render($table);
   $pager = array('#theme' => 'pager');
-  $output .= drupal_render($pager);
+  $output .= backdrop_render($pager);
   return $output;
 }
 

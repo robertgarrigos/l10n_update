@@ -53,7 +53,7 @@ define('L10N_UPDATE_SOURCE_COMPARE_GT', 1);
  * @see l10n_update_build_projects()
  */
 function l10n_update_get_projects($project_names = array()) {
-  $projects = &drupal_static(__FUNCTION__, array());
+  $projects = &backdrop_static(__FUNCTION__, array());
 
   if (empty($projects)) {
     // Get project data from the database.
@@ -75,7 +75,7 @@ function l10n_update_get_projects($project_names = array()) {
 
   // Return the requested project names or all projects.
   if ($project_names) {
-    return array_intersect_key($projects, drupal_map_assoc($project_names));
+    return array_intersect_key($projects, backdrop_map_assoc($project_names));
   }
   return $projects;
 }
@@ -84,7 +84,7 @@ function l10n_update_get_projects($project_names = array()) {
  * Clears the projects cache.
  */
 function l10n_update_clear_cache_projects() {
-  drupal_static('l10n_update_get_projects', array());
+  backdrop_static('l10n_update_get_projects', array());
 }
 
 /**
@@ -234,7 +234,7 @@ function l10n_update_source_build($project, $langcode, $filename = NULL) {
   $source->timestamp = 0;
   $source->last_checked = 0;
 
-  $filename = $filename ? $filename : variable_get('l10n_update_default_filename', L10N_UPDATE_DEFAULT_FILE_NAME);
+  $filename = $filename ? $filename : config_get('l10n_update.settings', 'l10n_update_default_filename');
 
   // If the server_pattern contains a remote file path we will check for a
   // remote file. The local version of this file will only be checked if a
@@ -267,7 +267,7 @@ function l10n_update_source_build($project, $langcode, $filename = NULL) {
       'version' => $project->version,
       'type' => L10N_UPDATE_LOCAL,
       'filename' => l10n_update_build_server_pattern($source, basename($source->server_pattern)),
-      'directory' => l10n_update_build_server_pattern($source, drupal_dirname($source->server_pattern)),
+      'directory' => l10n_update_build_server_pattern($source, backdrop_dirname($source->server_pattern)),
     );
     $files[L10N_UPDATE_LOCAL]->uri = $files[L10N_UPDATE_LOCAL]->directory . '/' . $files[L10N_UPDATE_LOCAL]->filename;
   }
@@ -322,7 +322,7 @@ function l10n_update_cron_fill_queue() {
   $updates = array();
 
   // Determine which project+language should be updated.
-  $last = REQUEST_TIME - variable_get('l10n_update_check_frequency', '0') * 3600 * 24;
+  $last = REQUEST_TIME - config_get('l10n_update.settings', 'l10n_update_check_frequency') * 3600 * 24;
   $query = db_select('l10n_update_file', 'f');
   $query->join('l10n_update_project', 'p', 'p.name = f.project');
   $query->condition('f.last_checked', $last, '<');
@@ -347,7 +347,7 @@ function l10n_update_cron_fill_queue() {
   if ($updates) {
     module_load_include('fetch.inc', 'l10n_update');
     $options = _l10n_update_default_update_options();
-    $queue = DrupalQueue::get('l10n_update', TRUE);
+    $queue = BackdropQueue::get('l10n_update', TRUE);
 
     foreach ($updates as $project => $languages) {
       $batch = l10n_update_batch_update_build(array($project), $languages, $options);
@@ -373,7 +373,7 @@ function _l10n_update_file_is_remote($uri) {
     if ($scheme == 'http' || $scheme == 'https') {
       return TRUE;
     }
-    return !drupal_realpath($scheme . '://');
+    return !backdrop_realpath($scheme . '://');
   }
   return FALSE;
 }
@@ -430,7 +430,7 @@ function _l10n_update_default_update_options() {
     'use_remote' => l10n_update_use_remote_source(),
   );
 
-  switch (variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP)) {
+  switch (config_get('l10n_update.settings', 'l10n_update_import_mode')) {
     case LOCALE_IMPORT_OVERWRITE:
       $options['overwrite_options'] = array(
         'customized' => TRUE,

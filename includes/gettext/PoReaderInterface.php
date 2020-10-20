@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoReaderInterface.
+ * Definition of Backdrop\Component\Gettext\PoReaderInterface.
  */
 
 /**

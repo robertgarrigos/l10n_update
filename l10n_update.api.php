@@ -35,7 +35,7 @@ function hook_l10n_update_projects_alter(array &$projects) {
 
   // Set the path to the custom module translation files if not already set.
   if (isset($projects['custom_module']) && empty($projects['custom_module']['info']['l10n path'])) {
-    $path = drupal_get_path('module', 'custom_module');
+    $path = backdrop_get_path('module', 'custom_module');
     $projects['custom_module']['info']['l10n path'] = $path . '/translations/%language.po';
   }
 
@@ -48,8 +48,9 @@ function hook_l10n_update_projects_alter(array &$projects) {
     'name' => 'new_example_project',
     'info' => array(
       'name' => 'New example project',
-      'version' => '7.x-1.5',
-      'core' => '7.x',
+      'version' => '1.x-1.5',
+      'backdrop' => '1.x',
+      'type' => 'module',
       'l10n path' => 'http://example.com/files/translations/%core/%project/%project-%release.%language.po',
     ),
   );

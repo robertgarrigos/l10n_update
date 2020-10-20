@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Entity\StringStorageException.
+ * Definition of Backdrop\Core\Entity\StringStorageException.
  */
 
 /**

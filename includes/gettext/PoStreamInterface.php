@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\Component\Gettext\PoStreamInterface.
+ * Definition of Backdrop\Component\Gettext\PoStreamInterface.
  */
 
 /**

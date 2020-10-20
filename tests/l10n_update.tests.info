@@ -1,0 +1,17 @@
+[L10nUpdateCronTest]
+name = Update translations using cron
+description = Tests for using cron to update project interface translations.
+group = Localization Update
+file = L10nUpdateCronTest.test
+
+[L10nUpdateInterfaceTest]
+name = Update translations user interface
+description = Tests for the user interface of project interface translations.
+group = Localization Update
+file = L10nUpdateInterfaceTest.test
+
+[L10nUpdateTest]
+name = Update translations
+description = Tests for updating the interface translations of projects.
+group = Localization Update
+file = L10nUpdateTest.test

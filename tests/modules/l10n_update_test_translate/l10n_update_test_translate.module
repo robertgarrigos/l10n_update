@@ -22,7 +22,7 @@ function l10n_update_test_translate_system_info_alter(&$info, $file, $type) {
     // Correct the path to the translation file. At a test-environment, the
     // module may be place in a different path.
     $basename = basename($info['l10n path']);
-    $path = drupal_get_path('module', 'l10n_update') . '/tests/modules/l10n_update_test_translate/translations/';
+    $path = backdrop_get_path('module', 'l10n_update') . '/tests/modules/l10n_update_test_translate/translations/';
     $info['l10n path'] = $path . $basename;
   }
 }

@@ -17,7 +17,7 @@ function l10n_update_test_system_info_alter(&$info, $file, $type) {
   // specified.
   // To test the module detection process by l10n_update_project_list() the
   // test modules should mimic a custom module. I.e. be non-hidden.
-  if (variable_get('l10n_update_test_system_info_alter', FALSE)) {
+  if (config_get('l10n_update.settings', 'l10n_update_test_system_info_alter')) {
     if ($file->name == 'l10n_update_test' || $file->name == 'l10n_update_test_translate') {
       // Don't hide the module.
       $info['hidden'] = FALSE;
@@ -38,9 +38,9 @@ function l10n_update_test_system_info_alter(&$info, $file, $type) {
  * in order for this hook to take effect.
  */
 function l10n_update_test_l10n_update_projects_alter(&$projects) {
-  if (variable_get('l10n_update_test_projects_alter', FALSE)) {
+  if (config_get('l10n_update.settings', 'l10n_update_test_projects_alter')) {
 
-    // Instead of the default ftp.drupal.org we use the file system of the test
+    // Instead of the default localize.backdropcms.org we use the file system of the test
     // instance to simulate a remote file location.
     $wrapper = file_stream_wrapper_get_instance_by_uri('public://');
     $remote_url = $wrapper->getExternalUrl() . '/remote/';
@@ -106,7 +106,7 @@ function l10n_update_test_l10n_update_projects_alter(&$projects) {
         'info' => array(
           'name' => 'Locale test',
           'interface translation project' => 'l10n_update_test',
-          'l10n path' => drupal_get_path('module', 'l10n_update') . '/tests/test.%language.po',
+          'l10n path' => backdrop_get_path('module', 'l10n_update') . '/tests/test.%language.po',
           'package' => 'Other',
           'version' => NULL,
           'project' => 'l10n_update_test',

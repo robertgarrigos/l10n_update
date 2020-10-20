@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Component\Gettext\PoStreamReader.
+ * Contains \Backdrop\Component\Gettext\PoStreamReader.
  */
 
 /**
@@ -614,7 +614,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
     if (module_exists('i18n_string') && strpos($comment, ':') !== FALSE) {
       // Fetch available textgroups.
       $groups = array_keys(i18n_string_group_info());
-      // Parse textgroup from comment (assume default drupal exports).
+      // Parse textgroup from comment (assume default backdrop exports).
       $comment_array = explode(':', $comment);
       if (!empty($comment_array) && in_array($comment_array[0], $groups)) {
         return $comment_array[0];

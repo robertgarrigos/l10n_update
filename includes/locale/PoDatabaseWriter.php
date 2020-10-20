@@ -140,7 +140,7 @@ class PoDatabaseWriter implements PoWriterInterface {
   /**
    * Implements PoMetadataInterface::setHeader().
    *
-   * Sets the header and configure Drupal accordingly.
+   * Sets the header and configure Backdrop accordingly.
    *
    * Before being able to process the given header we need to know in what
    * context this database write is done. For this the options must be set.

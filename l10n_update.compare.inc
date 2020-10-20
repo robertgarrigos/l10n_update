@@ -17,7 +17,7 @@ require_once __DIR__ . '/l10n_update.translation.inc';
  */
 function l10n_update_flush_projects() {
   db_truncate('l10n_update_project')->execute();
-  drupal_static_reset('l10n_update_build_projects');
+  backdrop_static_reset('l10n_update_build_projects');
 }
 
 /**
@@ -30,7 +30,7 @@ function l10n_update_flush_projects() {
  *   Array of project objects to be considered for translation update.
  */
 function l10n_update_build_projects($refresh = FALSE) {
-  $projects = &drupal_static(__FUNCTION__, array(), $refresh);
+  $projects = &backdrop_static(__FUNCTION__, array(), $refresh);
   if (empty($projects)) {
     module_load_include('inc', 'l10n_update');
 
@@ -55,14 +55,14 @@ function l10n_update_build_projects($refresh = FALSE) {
           $data['info']['version'] = $matches[1] . 'x';
         }
         elseif (preg_match("/^(\d+\.).*$/", $data['info']['version'], $matches)) {
-          // Example match: 7.33-dev => 7.x (Drupal core).
+          // Example match: 7.33-dev => 7.x (Backdrop core).
           $data['info']['version'] = $matches[1] . 'x';
         }
       }
 
       $data += array(
         'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
-        'core' => isset($data['info']['core']) ? $data['info']['core'] : DRUPAL_CORE_COMPATIBILITY,
+        'core' => isset($data['info']['core']) ? $data['info']['core'] : BACKDROP_CORE_COMPATIBILITY,
         'l10n_path' => isset($data['info']['l10n path']) && $data['info']['l10n path'] ? $data['info']['l10n path'] : $default_server['pattern'],
         'status' => 1,
       );
@@ -97,12 +97,12 @@ function l10n_update_build_projects($refresh = FALSE) {
  */
 function l10n_update_project_list() {
   $projects = array();
-  $disabled = variable_get('l10n_update_check_disabled', 0);
+  $disabled = config_get('l10n_update.settings', 'l10n_update_check_disabled');
   // Unlike update module, this one has no cache.
   _l10n_update_project_info_list($projects, system_rebuild_module_data(), 'module', $disabled);
   _l10n_update_project_info_list($projects, system_rebuild_theme_data(), 'theme', $disabled);
   // Allow other modules to alter projects before fetching and comparing.
-  drupal_alter('l10n_update_projects', $projects);
+  backdrop_alter('l10n_update_projects', $projects);
   l10n_update_remove_disabled_projects($projects);
   return $projects;
 }
@@ -114,7 +114,7 @@ function l10n_update_project_list() {
  *   Array of projects keyed by the project machine name.
  */
 function l10n_update_remove_disabled_projects(&$projects) {
-  $disabled_projects = variable_get('l10n_update_disabled_projects', array());
+  $disabled_projects = config_get('l10n_update.settings', 'l10n_update_disabled_projects');
 
   foreach ($disabled_projects as $disabled_name) {
 
@@ -196,7 +196,7 @@ function _l10n_update_project_info_list(array &$projects, array $list, $project_
         'info' => $file->info,
         'datestamp' => isset($file->info['datestamp']) ? $file->info['datestamp'] : 0,
         'includes' => array($file->name => isset($file->info['name']) ? $file->info['name'] : $file->name),
-        'project_type' => $project_name == 'drupal' ? 'core' : $project_type,
+        'project_type' => $project_name == 'backdrop' ? 'core' : $project_type,
       );
     }
     else {
@@ -227,7 +227,7 @@ function l10n_update_get_project_name($file) {
     $project_name = $file->info['project'];
   }
   elseif (isset($file->info['package']) && (strpos($file->info['package'], 'Core') === 0)) {
-    $project_name = 'drupal';
+    $project_name = 'backdrop';
   }
   return $project_name;
 }
@@ -240,7 +240,7 @@ function l10n_update_get_project_name($file) {
  *   - "server_pattern": URI containing po file pattern.
  */
 function l10n_update_default_translation_server() {
-  $pattern = variable_get('l10n_update_default_update_url', L10N_UPDATE_DEFAULT_SERVER_PATTERN);
+  $pattern = config_get('l10n_update.settings', 'l10n_update_default_update_url');
 
   return array(
     'pattern' => $pattern,
@@ -266,7 +266,7 @@ function l10n_update_check_projects($projects = array(), $langcodes = array()) {
   else {
     // Retrieve and save the status of local translations only.
     l10n_update_check_projects_local($projects, $langcodes);
-    variable_set('l10n_update_last_check', REQUEST_TIME);
+    state_set('l10n_update_last_check', REQUEST_TIME);
   }
 }
 
@@ -320,7 +320,7 @@ function l10n_update_batch_status_build($projects = array(), $langcodes = array(
     'progress_message' => '',
     'finished' => 'l10n_update_batch_status_finished',
     'error_message' => t('Error checking translation updates.'),
-    'file' => drupal_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
+    'file' => backdrop_get_path('module', 'l10n_update') . '/l10n_update.batch.inc',
   );
   return $batch;
 }

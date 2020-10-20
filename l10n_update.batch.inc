@@ -98,22 +98,22 @@ function l10n_update_batch_status_finished($success, array $results) {
       else {
         $message = format_plural(count($results['failed_files']), 'One translation files could not be checked. See the log for details.', '@count translation files could not be checked. See the log for details.');
       }
-      drupal_set_message($message, 'error');
+      backdrop_set_message($message, 'error');
     }
     if (isset($results['files'])) {
-      drupal_set_message(format_plural(
+      backdrop_set_message(format_plural(
         count($results['files']),
         'Checked available interface translation updates for one project.',
         'Checked available interface translation updates for @count projects.'
       ));
     }
     if (!isset($results['failed_files']) && !isset($results['files'])) {
-      drupal_set_message(t('Nothing to check.'));
+      backdrop_set_message(t('Nothing to check.'));
     }
-    variable_set('l10n_update_last_check', REQUEST_TIME);
+    state_set('l10n_update_last_check', REQUEST_TIME);
   }
   else {
-    drupal_set_message(t('An error occurred trying to check available interface translation updates.'), 'error');
+    backdrop_set_message(t('An error occurred trying to check available interface translation updates.'), 'error');
   }
 }
 
@@ -208,7 +208,7 @@ function l10n_update_batch_fetch_import($project, $langcode, array $options, &$c
 function l10n_update_batch_fetch_finished($success, array $results) {
   module_load_include('bulk.inc', 'l10n_update');
   if ($success) {
-    variable_set('l10n_update_last_check', REQUEST_TIME);
+    state_set('l10n_update_last_check', REQUEST_TIME);
   }
   l10n_update_batch_finished($success, $results);
 }
