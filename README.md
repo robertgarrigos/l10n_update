@@ -1,11 +1,10 @@
-
 Localization Update
--------------------
+===================
 
 Automatically download and update your translations by fetching them from
 <https://localize.backdropcms.org> or any other Localization server.
 
-The l10n update module helps to keep the translation of your drupal core and
+The l10n update module helps to keep the translation of your Backdrop core and
 contributed modules up to date with the central Backdrop translation repository
 at <https://localize.backdropcms.org>. Alternatively locally stored translation files
 can be used as translation source too.
@@ -127,8 +126,8 @@ Translation files are saved with the following file name syntax:
 `<module name>-<release>.<language code>.po`
 
 For example:
-  `masquerade-6.x-1.5.de.po`
-  `tac_lite-7.x-1.0-beta1.nl.po`
+  `masquerade-1.x-1.0.0.de.po`
+  `webform-1.x-4.23.0-beta1.nl.po`
 
 Po files included in distributions should match this syntax too.
 
@@ -152,7 +151,7 @@ access to localize.backdropcms.org. Contact your hosting to allow access.
 
 If only a few of your contributed modules are in the list, first verify that
 the translation is actually missing by visiting the listed URL of the .po file
-(for example <https://localize.backdropcms.org/files/translations/7.x/views/views.hu.po>)
+(for example <https://localize.backdropcms.org/files/translations/1.x/views/views.hu.po>)
 When the file is not found, you either try again later or contact a
 translation administrator of your language at <https://localize.backdropcms.org/>.
 
@@ -210,6 +209,8 @@ This project is GPL v2 software. See the LICENSE.txt file in this directory for 
 
 Maintainers
 -----------
+
+* Herb v/d Dool <https://github.com/herbdool>
 
 Seeking maintainers.
 

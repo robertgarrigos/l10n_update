@@ -51,18 +51,18 @@ function l10n_update_build_projects($refresh = FALSE) {
       // server to fall back to the latest stable release for that branch.
       if (isset($data['info']['version']) && strpos($data['info']['version'], '-dev')) {
         if (preg_match("/^(\d+\.x-\d+\.).*$/", $data['info']['version'], $matches)) {
-          // Example matches: 7.x-1.x-dev, 7.x-1.0-alpha1+5-dev => 7.x-1.x.
+          // Example matches: 1.x-1.x-dev, 1.x-1.0-alpha1+5-dev => 1.x-1.x.
           $data['info']['version'] = $matches[1] . 'x';
         }
         elseif (preg_match("/^(\d+\.).*$/", $data['info']['version'], $matches)) {
-          // Example match: 7.33-dev => 7.x (Backdrop core).
+          // Example match: 1.33-dev => 1.x (Backdrop core).
           $data['info']['version'] = $matches[1] . 'x';
         }
       }
 
       $data += array(
         'version' => isset($data['info']['version']) ? $data['info']['version'] : '',
-        'core' => isset($data['info']['core']) ? $data['info']['core'] : BACKDROP_CORE_COMPATIBILITY,
+        'backdrop' => isset($data['info']['backdrop']) ? $data['info']['backdrop'] : BACKDROP_CORE_COMPATIBILITY,
         'l10n_path' => isset($data['info']['l10n path']) && $data['info']['l10n path'] ? $data['info']['l10n path'] : $default_server['pattern'],
         'status' => 1,
       );
@@ -75,7 +75,7 @@ function l10n_update_build_projects($refresh = FALSE) {
         ->fields(array(
           'name' => $project->name,
           'project_type' => $project->project_type,
-          'core' => $project->core,
+          'core' => $project->backdrop,
           'version' => $project->version,
           'l10n_path' => $project->l10n_path,
           'status' => $project->status,
@@ -192,11 +192,11 @@ function _l10n_update_project_info_list(array &$projects, array $list, $project_
       // Only process this if we haven't done this project, since a single
       // project can have multiple modules or themes.
       $projects[$project_name] = array(
-        'name' => $project_name,
+        'name' => $project_name == 'backdrop' ? 'backdropcms' : $project_name,
         'info' => $file->info,
         'datestamp' => isset($file->info['datestamp']) ? $file->info['datestamp'] : 0,
         'includes' => array($file->name => isset($file->info['name']) ? $file->info['name'] : $file->name),
-        'project_type' => $project_name == 'backdrop' ? 'core' : $project_type,
+        'project_type' => $project_name == 'backdrop' ? 'backdropcms' : $project_type,
       );
     }
     else {
@@ -227,7 +227,7 @@ function l10n_update_get_project_name($file) {
     $project_name = $file->info['project'];
   }
   elseif (isset($file->info['package']) && (strpos($file->info['package'], 'Core') === 0)) {
-    $project_name = 'backdrop';
+    $project_name = 'backdropcms';
   }
   return $project_name;
 }
@@ -241,6 +241,9 @@ function l10n_update_get_project_name($file) {
  */
 function l10n_update_default_translation_server() {
   $pattern = config_get('l10n_update.settings', 'l10n_update_default_update_url');
+  if (empty($pattern)) {
+    $pattern = L10N_UPDATE_DEFAULT_SERVER_PATTERN;
+  }
 
   return array(
     'pattern' => $pattern,

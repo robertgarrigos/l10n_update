@@ -28,13 +28,16 @@ class L10nUpdateCronTest extends L10nUpdateTestBase {
    * Tests interface translation update using cron.
    */
   public function testUpdateCron() {
+    $config = config('l10n_update.settings');
     // Set a flag to let the l10n_update_test module replace the project data
     // with a set of test projects.
-    config_set('l10n_update.settings', 'l10n_update_test_projects_alter', TRUE);
+    $config->set('l10n_update_test_projects_alter', TRUE);
+    $config->save();
 
     // Setup local and remote translations files.
     $this->setTranslationFiles();
-    config_set('l10n_update.settings', 'l10n_update_default_filename', '%project-%release.%language._po');
+    $config->set('l10n_update_default_filename', '%project-%release.%language._po');
+    $config->save();
 
     // Update translations using batch to ensure a clean test starting point.
     $this->backdropGet('admin/config/regional/translate/check');
@@ -45,7 +48,7 @@ class L10nUpdateCronTest extends L10nUpdateTestBase {
 
     // Prepare for test: Simulate new translations being available.
     // Change the last updated timestamp of a translation file.
-    $contrib_module_two_uri = 'public://local/contrib_module_two-7.x-2.0-beta4.de._po';
+    $contrib_module_two_uri = 'public://local/contrib_module_two-1.x-2.0-beta4.de._po';
     touch(backdrop_realpath($contrib_module_two_uri), REQUEST_TIME);
 
     // Prepare for test: Simulate that the file has not been checked for a long

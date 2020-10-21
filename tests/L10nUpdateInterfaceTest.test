@@ -49,7 +49,7 @@ class L10nUpdateInterfaceTest extends L10nUpdateTestBase {
     // Add German language.
     $this->addLanguage('de');
 
-    // Drupal core is probably in 7.x, but tests may also be executed with
+    // Backdrop core is probably in 1.x, but tests may also be executed with
     // stable releases. As this is an uncontrolled factor in the test, we will
     // mark Drupal core as translated and continue with the prepared modules.
     $status = l10n_update_get_status();

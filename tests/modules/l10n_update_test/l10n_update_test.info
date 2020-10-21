@@ -3,5 +3,5 @@ type = module
 description = 'Support module for Localization Update module testing.'
 package = Testing
 version = '1.2'
-core = 7.x
+backdrop = 1.x
 hidden = true

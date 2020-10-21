@@ -102,25 +102,6 @@ define('L10N_UPDATE_STRING_CUSTOM', 1);
 define('L10N_UPDATE_CUSTOMIZED', 1);
 
 /**
- * Implements hook_help().
- */
-function l10n_update_help($path, $arg) {
-  $output = '';
-
-  switch ($path) {
-    case 'admin/config/regional/translate/update':
-      $output = '<p>' . t('Status of interface translations for each of the enabled languages.') . '</p>';
-      $output .= '<p>' . t('If there are available updates you can click on "Update translation" for them to be downloaded and imported now or you can edit the configuration for them to be updated automatically on the <a href="@update-settings">Update settings page</a>', array('@update-settings' => url('admin/config/regional/language/update'))) . '</p>';
-      break;
-
-    case 'admin/config/regional/language/update':
-      $output = '<p>' . t('These are the settings for the translation update system. To update your translations now, check out the <a href="@update-admin">Translation update administration page</a>.', array('@update-admin' => url('admin/config/regional/translate/update'))) . '</p>';
-      break;
-  }
-  return $output;
-}
-
-/**
  * Implements hook_autoload_info().
  */
 function l10n_update_autoload_info() {
@@ -491,14 +472,15 @@ function l10n_update_client_save_string() {
           $message = theme('l10n_client_message', array('message' => t('Unknown error while saving translation locally.')));
         }
 
+        $config_client = config('l10n_client.settings');
         // Submit to remote server if enabled.
-        if (config_get('l10n_client.settings', 'l10n_client_use_server') && user_access('submit translations to localization server') && ($_POST['textgroup'] == 'default')) {
+        if ($config_client->get('l10n_client_use_server') && user_access('submit translations to localization server') && ($_POST['textgroup'] == 'default')) {
           if (!empty($user->data['l10n_client_key'])) {
             $remote_result = l10n_client_submit_translation($language->langcode, $_POST['source'], $_POST['target'], $user->data['l10n_client_key'], l10n_client_user_token($user));
             $message .= theme('l10n_client_message', array('message' => $remote_result[1], 'level' => $remote_result[0] ? WATCHDOG_INFO : WATCHDOG_ERROR));
           }
           else {
-            $server_url = config_get('l10n_client.settings', 'l10n_client_server');
+            $server_url = $config_client->get('l10n_client_server');
             $user_edit_url = url('user/' . $user->uid . '/edit', array('absolute' => TRUE));
             $message .= theme('l10n_client_message', array(
               'message' => t('You could share your work with !l10n_server if you set your API key at !user_link.', array(
@@ -761,7 +743,7 @@ function l10n_update_status_save($project, $langcode, $type, $data) {
     }
 
     cache_set('l10n_update_status', $status);
-    config_set('l10n_update.settings', 'l10n_update_last_check', REQUEST_TIME);
+    state_set('l10n_update_last_check', REQUEST_TIME);
   }
 }
 

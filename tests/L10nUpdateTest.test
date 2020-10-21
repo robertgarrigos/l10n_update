@@ -42,13 +42,15 @@ class L10nUpdateTest extends L10nUpdateTestBase {
    */
   public function testUpdateProjects() {
     module_load_include('compare.inc', 'l10n_update');
-    config_set('l10n_update.settings', 'l10n_update_test_projects_alter', TRUE);
+    $config = config('l10n_update.settings');
+    $config->set('l10n_update_test_projects_alter', TRUE);
 
     // Make the test modules look like a normal custom module. i.e. make the
     // modules not hidden. l10n_update_test_system_info_alter() modifies the
     // project info of the l10n_update_test and l10n_update_test_translate
     // modules.
-    config_set('l10n_update.settings', 'l10n_update_test_system_info_alter', TRUE);
+    $config->set('l10n_update_test_system_info_alter', TRUE);
+    $config->save();
     $this->resetAll();
 
     // Check if interface translation data is collected from hook_info.
@@ -73,13 +75,17 @@ class L10nUpdateTest extends L10nUpdateTestBase {
    * for local files only, check for both local and remote files.
    */
   public function testUpdateCheckStatus() {
+    $config = config('l10n_update.settings');
+
     // Set a flag to let the l10n_update_test module replace the project data
     // with a set of test projects.
-    config_set('l10n_update.settings', 'l10n_update_test_projects_alter', TRUE);
+    $config->set('l10n_update_test_projects_alter', TRUE);
+    $config->save();
 
     // Create local and remote translations files.
     $this->setTranslationFiles();
-    config_set('l10n_update.settings', 'l10n_update_default_filename', '%project-%release.%language._po');
+    $config->set('l10n_update_default_filename', '%project-%release.%language._po');
+    $config->save();
 
     // Set the test conditions.
     $edit = array(

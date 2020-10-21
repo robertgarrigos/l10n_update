@@ -111,6 +111,13 @@ function l10n_update_status_form() {
   }
 
   $last_checked = state_get('l10n_update_last_check');
+  $output = t('Status of interface translations for each of the enabled languages.') . ' ';
+  $output .= t('If there are available updates you can click on "Update translation" for them to be downloaded and imported now or you can edit the configuration for them to be updated automatically on the <a href="@update-settings">Update settings page</a>', array('@update-settings' => url('admin/config/regional/language/update')));
+
+  $form['help'] = array(
+    '#type' => 'help',
+    '#markup' => $output,
+  );
   $form['last_checked'] = array(
     '#theme' => 'l10n_update_last_check',
     '#last' => $last_checked,
@@ -220,8 +227,14 @@ function l10n_update_status_form_submit($form, $form_state) {
  * Page callback: Settings form.
  */
 function l10n_update_admin_settings_form($form, &$form_state) {
+  $output = t('These are the settings for the translation update system. To update your translations now, check out the <a href="@update-admin">Translation update administration page</a>.', array('@update-admin' => url('admin/config/regional/translate/update')));
+
   $config = config('l10n_update.settings');
   $form['#config'] = 'l10n_update.settings';
+  $form['help'] = array(
+    '#type' => 'help',
+    '#markup' => $output,
+  );
   $form['l10n_update_check_frequency'] = array(
     '#type' => 'radios',
     '#title' => t('Check for updates'),
@@ -365,8 +378,8 @@ function _l10n_update_admin_import_options() {
 /**
  * Provides debug info for projects in case translation files are not found.
  *
- * Translations files are being fetched either from Backdrop CMS translation server
- * and local files or only from the local filesystem depending on the
+ * Translations files are being fetched either from Backdrop CMS translation
+ * server and local files or only from the local filesystem depending on the
  * "Translation source" setting at admin/config/regional/language/update.
  * This method will produce debug information including the respective path(s)
  * based on this setting.

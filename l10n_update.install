@@ -148,27 +148,30 @@ function l10n_update_schema_alter(&$schema) {
  * Implements hook_install().
  */
 function l10n_update_install() {
+  $config = config('l10n_update.settings');
   db_add_field('locales_target', 'l10n_status', array(
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
   ));
-  config_set('l10n_update.settings', 'l10n_update_rebuild_projects');
+  $config->set('l10n_update_rebuild_projects', 1);
 
   // Create the translation directory. We try different alternative paths as the
   // default may not always be writable.
   $directories = array(
-    config_get('l10n_update.settings', 'l10n_update_download_store'),
+    $config->get('l10n_update_download_store'),
     config_get('system.core', 'file_public_path') . '/translations',
     'files/translations',
   );
   foreach ($directories as $directory) {
     if (file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      config_set('l10n_update.settings', 'l10n_update_download_store', $directory);
+      $config->set('l10n_update_download_store', $directory);
       l10n_update_ensure_htaccess($directory);
       return;
     }
   }
+  $config->save();
+
   watchdog('l10n_update', 'The directory %directory does not exist or is not writable.', array('%directory' => $directories[0]), WATCHDOG_ERROR);
   backdrop_set_message(t('The directory %directory does not exist or is not writable.', array('%directory' => $directories[0])), 'error');
 }
@@ -267,37 +270,9 @@ function l10n_update_requirements($phase) {
 }
 
 /**
- * Clean-up after plural string conversion.
- *
- * @param array $results
- *   Batch results array.
- */
-function l10n_update_finish_d8_plural_strings($results) {
-  require_once BACKDROP_ROOT . '/core/includes/locale.inc';
-
-  if ($results) {
-    // Delete converted D8 style translations.
-    if (isset($results['lids'])) {
-      foreach ($results['lids'] as $lids) {
-        db_delete('locales_source')->condition('lid', $lids)->execute();
-        db_delete('locales_target')->condition('lid', $lids)->execute();
-      }
-    }
-
-    // Clear caches if translations are modified.
-    if (isset($results['languages'])) {
-      cache_clear_all('locale:', 'cache', TRUE);
-      foreach ($results['languages'] as $langcode) {
-        _locale_invalidate_js($langcode);
-      }
-    }
-  }
-}
-
-/**
  * Set the minimum upgrade version.
  *
- * Ensure you've upgraded to the 7.x-4.x version of webform in Drupal 7 before
+ * Ensure you've upgraded to the latest version in Drupal 7 before
  * attempting to upgrade to Backdrop.
  */
 function l10n_update_update_last_removed() {
