@@ -131,6 +131,18 @@ function l10n_update_autoload_info() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function l10n_update_config_info() {
+  $prefixes['l10n_update.settings'] = array(
+    'label' => t('Localization update settings'),
+    'group' => t('Configuration'),
+  );
+
+  return $prefixes;
+}
+
+/**
  * Implements hook_menu().
  */
 function l10n_update_menu() {
