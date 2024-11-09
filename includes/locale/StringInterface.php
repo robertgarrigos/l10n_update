@@ -175,20 +175,4 @@ interface StringInterface {
    */
   public function delete();
 
-  /**
-   * Get the translation group of this translation.
-   *
-   * @return string
-   *   The textgroup set for the current string
-   */
-  public function getTextgroup();
-
-  /**
-   * Set the translation group of this translation.
-   *
-   * @param string $textgroup
-   *   The text group to set for the given string.
-   */
-  public function setTextgroup($textgroup);
-
 }

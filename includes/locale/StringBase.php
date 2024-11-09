@@ -56,13 +56,6 @@ abstract class StringBase implements StringInterface {
   public $context;
 
   /**
-   * The string group.
-   *
-   * @var string
-   */
-  public $textgroup;
-
-  /**
    * The string version.
    *
    * @var string
@@ -169,20 +162,6 @@ abstract class StringBase implements StringInterface {
       }
     }
     return $values;
-  }
-
-  /**
-   * Implements StringInterface::getTextgroup().
-   */
-  public function getTextgroup() {
-    return empty($this->textgroup) ? 'default' : $this->textgroup;
-  }
-
-  /**
-   * Implements StringInterface::setTextgroup().
-   */
-  public function setTextgroup($textgroup) {
-    $this->textgroup = $textgroup;
   }
 
   /**

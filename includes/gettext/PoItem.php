@@ -84,26 +84,6 @@ class PoItem {
   }
 
   /**
-   * Get the translation group of this translation.
-   *
-   * @return string
-   *   The translation text group.
-   */
-  public function getTextgroup() {
-    return empty($this->_textgroup) ? 'default' : $this->_textgroup;
-  }
-
-  /**
-   * Set the translation group of this translation.
-   *
-   * @param string $textgroup
-   *   The translation text group.
-   */
-  public function setTextgroup($textgroup) {
-    $this->_textgroup = $textgroup;
-  }
-
-  /**
    * Get the context this translation belongs to.
    *
    * @return string

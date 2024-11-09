@@ -177,17 +177,18 @@ class PoDatabaseWriter implements PoWriterInterface {
 
     if (array_sum($overwrite_options) || empty($languages[$langcode]->plurals)) {
       // Get and store the plural formula if available.
-      $plural = $header->getPluralForms();
-      if (isset($plural) && $p = $header->parsePluralForms($plural)) {
-        list($nplurals, $formula) = $p;
-        db_update('languages')
-          ->fields(array(
-            'plurals' => $nplurals,
-            'formula' => $formula,
-          ))
-          ->condition('language', $langcode)
-          ->execute();
-      }
+      // TODO: This is not working with backdrop.
+      // $plural = $header->getPluralForms();
+      // if (isset($plural) && $p = $header->parsePluralForms($plural)) {
+      //   list($nplurals, $formula) = $p;
+      //   db_update('languages')
+      //     ->fields(array(
+      //       'plurals' => $nplurals,
+      //       'formula' => $formula,
+      //     ))
+      //     ->condition('language', $langcode)
+      //     ->execute();
+      // }
     }
   }
 
@@ -254,14 +255,12 @@ class PoDatabaseWriter implements PoWriterInterface {
     $context = $item->getContext();
     $source = $item->getSource();
     $translation = $item->getTranslation();
-    $textgroup = $item->getTextgroup();
 
     // Look up the source string and any existing translation.
     $strings = $this->storage->getTranslations(array(
       'language' => $this->_langcode,
       'source' => $source,
       'context' => $context,
-      'textgroup' => $textgroup,
     ));
     $string = reset($strings);
 
@@ -296,7 +295,7 @@ class PoDatabaseWriter implements PoWriterInterface {
       }
       else {
         // No such source string in the database yet.
-        $string = $this->storage->createString(array('source' => $source, 'context' => $context, 'textgroup' => $textgroup))
+        $string = $this->storage->createString(array('source' => $source, 'context' => $context))
           ->save();
         $this->storage->createTranslation(array(
           'lid' => $string->getId(),

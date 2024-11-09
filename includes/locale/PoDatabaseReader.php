@@ -96,13 +96,6 @@ class PoDatabaseReader implements PoReaderInterface {
   }
 
   /**
-   * @param \string $textgroup
-   */
-  public function setTextgroup($textgroup) {
-    $this->_textgroup = $textgroup;
-  }
-
-  /**
    * Implements PoMetadataInterface::getHeader().
    */
   public function getHeader() {
@@ -125,11 +118,7 @@ class PoDatabaseReader implements PoReaderInterface {
   private function loadStrings() {
     $langcode = $this->_langcode;
     $options = $this->_options;
-    $textgroup = $this->_textgroup;
     $conditions = array();
-    if ($textgroup) {
-      $conditions['textgroup'] = $textgroup;
-    }
 
     if (array_sum($options) == 0) {
       // If user asked to not include anything in the translation files,

@@ -470,8 +470,6 @@ function _l10n_update_default_update_options() {
  *   Source string.
  * @param string $translation
  *   Translation to language specified in $langcode.
- * @param string $textgroup
- *   Name of textgroup to store translation in.
  * @param string $location
  *   Location value to save with source string.
  * @param int $mode
@@ -487,18 +485,15 @@ function _l10n_update_default_update_options() {
  * @return string
  *   The string ID of the existing string modified or the new string added.
  */
-function _l10n_update_locale_import_one_string_db(array &$report, $langcode, $context, $source, $translation, $textgroup, $location, $mode, $status = L10N_UPDATE_NOT_CUSTOMIZED, $plid = 0, $plural = 0) {
-  $lid = db_query("SELECT lid FROM {locales_source} WHERE source = :source AND context = :context AND textgroup = :textgroup", array(
+function _l10n_update_locale_import_one_string_db(array &$report, $langcode, $context, $source, $translation, $location, $mode, $status = L10N_UPDATE_NOT_CUSTOMIZED, $plid = 0, $plural = 0) {
+  $lid = db_query("SELECT lid FROM {locales_source} WHERE source = :source AND context = :context", array(
     ':source' => $source,
     ':context' => $context,
-    ':textgroup' => $textgroup,
   ))->fetchField();
 
   if (!empty($translation)) {
     // Skip this string unless it passes a check for dangerous code.
-    // Text groups other than default still can contain HTML tags
-    // (i.e. translatable blocks).
-    if ($textgroup == "default" && !locale_string_is_safe($translation)) {
+    if (!locale_string_is_safe($translation)) {
       $report['skips']++;
       $lid = 0;
       watchdog('locale', 'Disallowed HTML detected. String not imported: %string', array('%string' => $translation), WATCHDOG_WARNING);
@@ -550,7 +545,6 @@ function _l10n_update_locale_import_one_string_db(array &$report, $langcode, $co
           'location' => $location,
           'source' => $source,
           'context' => (string) $context,
-          'textgroup' => $textgroup,
         ))
         ->execute();
 
