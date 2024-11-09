@@ -312,7 +312,7 @@ function l10n_update_build_server_pattern($project, $template) {
     '%core' => $project->core,
     '%language' => isset($project->langcode) ? $project->langcode : '%language',
   );
-  return strtr($template, $variables);
+  return strtr($template ? $template : '', $variables);
 }
 
 /**
@@ -424,6 +424,8 @@ function _l10n_update_source_compare($source1, $source2) {
  *   Array of translation import options.
  */
 function _l10n_update_default_update_options() {
+  require_once BACKDROP_ROOT . '/core/includes/locale.inc';
+
   $options = array(
     'customized' => L10N_UPDATE_NOT_CUSTOMIZED,
     'finish_feedback' => TRUE,

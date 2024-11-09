@@ -227,6 +227,8 @@ function l10n_update_status_form_submit($form, $form_state) {
  * Page callback: Settings form.
  */
 function l10n_update_admin_settings_form($form, &$form_state) {
+  require_once BACKDROP_ROOT . '/core/includes/locale.inc';
+
   $output = t('These are the settings for the translation update system. To update your translations now, check out the <a href="@update-admin">Translation update administration page</a>.', array('@update-admin' => url('admin/config/regional/translate/update')));
 
   $config = config('l10n_update.settings');
