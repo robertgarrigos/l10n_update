@@ -7,4 +7,4 @@ backdrop = 1.x
 type = module
 hidden = true
 interface translation project = l10n_update_test_translate
-l10n path = modules/contrib/l10n_update/tests/modules/l10n_update_test_translate/translations/l10n_update_test_translate.%language.po
+l10n path = modules/l10n_update/tests/modules/l10n_update_test_translate/translations/l10n_update_test_translate.%language.po

@@ -17,7 +17,7 @@ class L10nUpdateInterfaceTest extends L10nUpdateTestBase {
    */
   public function setUp() {
     parent::setUp();
-    $admin_user = $this->backdropCreateUser(array('administer modules', 'administer site configuration', 'administer languages', 'access administration pages', 'translate interface'));
+    $admin_user = $this->backdropCreateUser(array('administer modules', 'administer site configuration', 'administer languages', 'access administration pages', 'translate interface', 'access site reports'));
     $this->backdropLogin($admin_user);
   }
 
@@ -51,9 +51,9 @@ class L10nUpdateInterfaceTest extends L10nUpdateTestBase {
 
     // Backdrop core is probably in 1.x, but tests may also be executed with
     // stable releases. As this is an uncontrolled factor in the test, we will
-    // mark Drupal core as translated and continue with the prepared modules.
+    // mark Backdrop core as translated and continue with the prepared modules.
     $status = l10n_update_get_status();
-    $status['backdrop']['de']->type = 'current';
+    $status['backdropcms']['de']->type = 'current';
     cache_set('l10n_update_status', $status);
 
     // One language added, all translations up to date.
