@@ -370,6 +370,8 @@ function l10n_update_admin_settings_form_submit($form, &$form_state) {
  *   Keyed array of import options.
  */
 function _l10n_update_admin_import_options() {
+  require_once BACKDROP_ROOT . '/core/includes/locale.inc';
+
   return array(
     LOCALE_IMPORT_OVERWRITE => t('Translation updates replace existing ones, new ones are added'),
     L10N_UPDATE_OVERWRITE_NON_CUSTOMIZED => t('Edited translations are kept, only previously imported ones are overwritten and new translations are added'),
