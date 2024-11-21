@@ -521,10 +521,12 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
     $plural = FALSE;
 
     $comments = '';
-    $textgroup = 'default';
     if (isset($value['#'])) {
       $comments = $this->shortenComments($value['#']);
-      $textgroup = $this->fetchGroupFromComment($comments);
+      if (module_exists('i18n_string')) {
+        $textgroup = 'default';
+        $textgroup = $this->fetchGroupFromComment($comments);
+      }
     }
 
     if (is_array($value['msgstr'])) {
@@ -540,7 +542,9 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
     $item->setPlural($plural);
     $item->setComment($comments);
     $item->setLangcode($this->_langcode);
-    $item->setTextgroup($textgroup);
+    if (module_exists('i18n_string')) {
+      $item->setTextgroup($textgroup);
+    }
 
     $this->_last_item = $item;
 

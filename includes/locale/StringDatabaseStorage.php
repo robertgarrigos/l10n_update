@@ -408,13 +408,19 @@ class StringDatabaseStorage implements StringStorageInterface {
    *   If it succeeded returns the last insert ID of the query, if one exists.
    *
    * @throws StringStorageException
-   *   If the string is not suitable for this storage, an exception ithrown.
+   *   If the string is not suitable for this storage, an exception is thrown.
    */
   protected function dbStringInsert(StringInterface $string) {
     if ($string->isSource()) {
       $string->setValues(array('context' => '', 'version' => 'none'), FALSE);
-      $fields = $string->getValues(array('source', 'context', 'version', 'textgroup'));
-      // @todo Add support for D7 fields 'location' and 'textgroup'.
+      if (module_exists('i18n_string')) {
+        $fields = $string->getValues(array('source', 'context', 'version', 'textgroup'));
+        // @todo Add support for D7 fields 'location' and 'textgroup'.
+      }
+      {
+        $fields = $string->getValues(array('source', 'context', 'version'));
+        // @todo Add support for D7 fields 'location'.
+      }
     }
     elseif ($string->isTranslation()) {
       $string->setValues(array('customized' => 0), FALSE);
